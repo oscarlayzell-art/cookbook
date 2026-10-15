@@ -1,21 +1,23 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { supabaseConfigProblem, supabaseKey, supabaseUrl } from "./config";
 
 const PUBLIC_PATHS = ["/", "/login", "/auth"];
 
 export async function updateSession(request: NextRequest) {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return new NextResponse(
-      "The cookbook isn't connected to its database yet. In Vercel, add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY under Settings > Environment Variables, then redeploy.",
-      { status: 500, headers: { "content-type": "text/plain; charset=utf-8" } },
-    );
+  const problem = supabaseConfigProblem();
+  if (problem) {
+    return new NextResponse(problem, {
+      status: 500,
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    });
   }
 
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl!,
+    supabaseKey!,
     {
       cookies: {
         getAll() {

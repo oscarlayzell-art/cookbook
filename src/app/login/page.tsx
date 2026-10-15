@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { supabaseUrl } from "@/lib/supabase/config";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -21,7 +22,9 @@ export default function LoginPage() {
       setError(
         error.message.includes("invite-only")
           ? "This cookbook is invite-only for now. Ask Oscar for an invite."
-          : error.message,
+          : error.message === "Failed to fetch"
+            ? `Couldn't reach the sign-in service at ${supabaseUrl}. Check NEXT_PUBLIC_SUPABASE_URL in Vercel, or try turning off any ad or tracker blocker.`
+            : error.message,
       );
       return;
     }
