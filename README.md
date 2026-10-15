@@ -17,6 +17,8 @@ Built with Next.js, hosted on Vercel, with Supabase for sign-in and the database
    Vercel address and add `https://<your-site>/auth/callback` to the redirect URLs.
 4. **Vercel**: import this GitHub repo at vercel.com/new and add the two variables from
    `.env.example` (found in Supabase > Project Settings > API).
+5. **Paste a recipe** (optional): add `ANTHROPIC_API_KEY` in Vercel, from console.anthropic.com.
+   It reads recipes people paste in, at a few pence each.
 
 ## Local development
 

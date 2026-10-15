@@ -27,7 +27,10 @@ export default function SaveButtonPage() {
       </p>
 
       <h2 className="mt-8 text-lg font-semibold">On a computer</h2>
-      <p className="mt-2">Drag this button up onto your bookmarks bar:</p>
+      <p className="mt-2">
+        Drag this button up onto your bookmarks bar. No bookmarks bar (Arc, for example)?{" "}
+        <Link href="/book/paste" className="underline">Paste the recipe instead</Link>.
+      </p>
       <a
         ref={link}
         onClick={(e) => e.preventDefault()}

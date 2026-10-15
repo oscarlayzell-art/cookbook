@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { cleanUrl, importRecipe, ImportError, recipeFromHtml } from "@/lib/import/fetch";
+import { recipeFromText } from "@/lib/import/ai";
 import type { ImportedRecipe } from "@/lib/import/parse";
 
 export type ImportState = { error: string | null; blocked?: boolean };
@@ -15,7 +16,7 @@ async function existingRecipeId(supabase: Supabase, url: string) {
   return data?.id as string | undefined;
 }
 
-async function saveRecipe(supabase: Supabase, url: string, recipe: ImportedRecipe) {
+async function saveRecipe(supabase: Supabase, url: string | null, recipe: ImportedRecipe) {
   const { data, error } = await supabase
     .from("recipes")
     .insert({ ...recipe, source_url: url })
@@ -50,6 +51,29 @@ export async function addRecipeFromPage(pageUrl: string, html: string): Promise<
     const existing = await existingRecipeId(supabase, url);
     if (existing) redirect(`/book/${existing}`);
     id = await saveRecipe(supabase, url, recipeFromHtml(html, url));
+  } catch (e) {
+    if (e instanceof ImportError) return { error: e.message };
+    throw e;
+  }
+  revalidatePath("/book");
+  redirect(`/book/${id}`);
+}
+
+/** Save a recipe from page text the user copied and pasted in, read by AI. */
+export async function addRecipeFromText(_prev: ImportState, formData: FormData): Promise<ImportState> {
+  const supabase = await createClient();
+  let id: string;
+  try {
+    const pasted = String(formData.get("text") ?? "").trim();
+    if (pasted.length < 50) throw new ImportError("Paste the whole recipe page, including ingredients and method.");
+    if (pasted.length > 100_000) throw new ImportError("That's a lot of text. Try copying just the recipe part of the page.");
+    const rawUrl = String(formData.get("url") ?? "").trim();
+    const url = rawUrl ? cleanUrl(rawUrl) : null;
+    if (url) {
+      const existing = await existingRecipeId(supabase, url);
+      if (existing) redirect(`/book/${existing}`);
+    }
+    id = await saveRecipe(supabase, url, await recipeFromText(pasted));
   } catch (e) {
     if (e instanceof ImportError) return { error: e.message };
     throw e;
