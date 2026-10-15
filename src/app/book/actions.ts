@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { cleanUrl, importRecipe, ImportError, recipeFromHtml } from "@/lib/import/fetch";
@@ -10,6 +10,13 @@ import type { ImportedRecipe } from "@/lib/import/parse";
 export type ImportState = { error: string | null; blocked?: boolean };
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+/** Let Next.js redirects through; turn anything else into a message instead of crashing the page. */
+function unexpected(e: unknown): ImportState {
+  unstable_rethrow(e);
+  console.error("Saving a recipe failed", e);
+  return { error: "Something went wrong saving that recipe. Please try again." };
+}
 
 async function existingRecipeId(supabase: Supabase, url: string) {
   const { data } = await supabase.from("recipes").select("id").eq("source_url", url).maybeSingle();
@@ -36,7 +43,7 @@ export async function addRecipeFromUrl(_prev: ImportState, formData: FormData): 
     id = await saveRecipe(supabase, url, await importRecipe(url));
   } catch (e) {
     if (e instanceof ImportError) return { error: e.message, blocked: e.blocked };
-    throw e;
+    return unexpected(e);
   }
   revalidatePath("/book");
   redirect(`/book/${id}`);
@@ -53,7 +60,7 @@ export async function addRecipeFromPage(pageUrl: string, html: string): Promise<
     id = await saveRecipe(supabase, url, recipeFromHtml(html, url));
   } catch (e) {
     if (e instanceof ImportError) return { error: e.message };
-    throw e;
+    return unexpected(e);
   }
   revalidatePath("/book");
   redirect(`/book/${id}`);
@@ -76,7 +83,7 @@ export async function addRecipeFromText(_prev: ImportState, formData: FormData):
     id = await saveRecipe(supabase, url, await recipeFromText(pasted));
   } catch (e) {
     if (e instanceof ImportError) return { error: e.message };
-    throw e;
+    return unexpected(e);
   }
   revalidatePath("/book");
   redirect(`/book/${id}`);
