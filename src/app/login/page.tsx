@@ -20,7 +20,8 @@ export default function LoginPage() {
     if (error) {
       setStatus("idle");
       setError(
-        error.message.includes("invite-only")
+        // Supabase reports our invite check as a generic "Database error saving new user".
+        /invite-only|database error saving new user/i.test(error.message)
           ? "This cookbook is invite-only for now. Ask Oscar for an invite."
           : error.message === "Failed to fetch"
             ? `Couldn't reach the sign-in service at ${supabaseUrl}. Check NEXT_PUBLIC_SUPABASE_URL in Vercel, or try turning off any ad or tracker blocker.`
