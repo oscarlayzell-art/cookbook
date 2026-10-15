@@ -37,11 +37,17 @@ export function AddRecipeForm() {
             <Link href="/book/save-button" className="underline">
               Set up the button
             </Link>
+          )}{" "}
+          {state.blocked && (
+            <Link href="/book/paste" className="underline">
+              or paste it
+            </Link>
           )}
         </p>
       )}
       <p className="mt-2 text-sm text-stone-500">
-        Site won&apos;t let us in? <Link href="/book/save-button" className="underline">Use the Save to Cook Book button</Link>.
+        Site won&apos;t let us in? <Link href="/book/save-button" className="underline">Use the Save to Cook Book button</Link> or{" "}
+        <Link href="/book/paste" className="underline">paste the recipe</Link>.
       </p>
     </form>
   );
