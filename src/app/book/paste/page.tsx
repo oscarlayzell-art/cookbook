@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { PasteForm } from "./paste-form";
 
+// Reading a long page with AI can take a while.
+export const maxDuration = 120;
+
 export default function PastePage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">

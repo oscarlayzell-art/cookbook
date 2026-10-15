@@ -24,10 +24,12 @@ const PROMPT = `Below is text a person copied from a recipe web page. It may inc
 
 /** Turn text pasted from a recipe page into a recipe, using Claude. */
 export async function recipeFromText(pasted: string): Promise<ImportedRecipe> {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  // Pasted keys often pick up stray spaces or quotes.
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim().replace(/^["'`]+|["'`]+$/g, "");
+  if (!apiKey) {
     throw new ImportError("Pasting recipes isn't switched on yet. Ask Oscar to add the AI key.");
   }
-  const client = new Anthropic();
+  const client = new Anthropic({ apiKey });
   let response;
   try {
     response = await client.messages.parse({
@@ -38,7 +40,7 @@ export async function recipeFromText(pasted: string): Promise<ImportedRecipe> {
     });
   } catch (e) {
     console.error("AI recipe extraction failed", e);
-    throw new ImportError("We couldn't read that recipe just now. Please try again in a minute.");
+    throw new ImportError(aiErrorMessage(e));
   }
   const r = response.parsed_output;
   if (response.stop_reason === "refusal" || !r) {
@@ -61,4 +63,14 @@ export async function recipeFromText(pasted: string): Promise<ImportedRecipe> {
     tags: r.tags,
     source_data: { pasted: true },
   };
+}
+
+function aiErrorMessage(e: unknown) {
+  if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError)
+    return "The AI key isn't working. Check ANTHROPIC_API_KEY in Vercel, then redeploy.";
+  if (e instanceof Anthropic.APIError && /credit balance/i.test(e.message))
+    return "The AI account is out of credit. Add credit at console.anthropic.com (Billing).";
+  if (e instanceof Anthropic.RateLimitError) return "Too many recipes at once. Please try again in a minute.";
+  if (e instanceof Anthropic.APIError) return `The AI service said no (${e.status ?? "error"}): ${e.message}`;
+  return "We couldn't read that recipe just now. Please try again in a minute.";
 }
