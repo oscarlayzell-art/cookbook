@@ -13,6 +13,9 @@ Built with Next.js, hosted on Vercel, with Supabase for sign-in and the database
    ```sql
    insert into public.invites (email) values ('you@example.com');
    ```
+   People then create their own account with email and password on the sign-in page.
+   Optional: since only invited emails can sign up, you can turn off "Confirm email" in
+   Supabase > Authentication > Sign In / Providers > Email so new accounts work straight away.
 3. **Auth redirect**: in Supabase > Authentication > URL Configuration, set the Site URL to your
    Vercel address and add `https://<your-site>/auth/callback` to the redirect URLs.
 4. **Vercel**: import this GitHub repo at vercel.com/new and add the two variables from
