@@ -17,7 +17,10 @@ export default async function BookPage() {
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-12">
-      <h1 className="text-3xl font-semibold">My cookbook</h1>
+      <div className="flex items-baseline justify-between gap-4">
+        <h1 className="text-3xl font-semibold">My cookbook</h1>
+        <Link href="/book/prices" className="text-sm text-orange-800 underline">My prices</Link>
+      </div>
       <AddRecipeForm />
       {!recipes?.length ? (
         <p className="mt-10 text-stone-600">No recipes yet. Paste a link above to add your first.</p>
