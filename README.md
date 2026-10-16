@@ -22,6 +22,9 @@ Built with Next.js, hosted on Vercel, with Supabase for sign-in and the database
    `.env.example` (found in Supabase > Project Settings > API).
 5. **Paste a recipe** (optional): add `ANTHROPIC_API_KEY` in Vercel, from console.anthropic.com.
    It reads recipes people paste in, at a few pence each.
+6. **Receipts and recipe costs** (needs the key from step 5): in the Supabase SQL editor, run
+   `supabase/migrations/0002_prices.sql`. People can then upload receipts on the My prices page
+   and see a cost per portion on each recipe.
 
 ## Local development
 

@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { baseServings } from "@/lib/servings/scale";
 import { deleteRecipe } from "../actions";
+import { ServingsView } from "./servings-view";
+import { CostPanel } from "./cost-panel";
+
+// Working out a cost with AI can take a while.
+export const maxDuration = 120;
 
 export default async function RecipePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -40,33 +46,14 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
         </p>
       )}
 
-      <section className="mt-8">
-        <h2 className="text-xl font-semibold">Ingredients</h2>
-        <ul className="mt-3 list-disc space-y-1 pl-5">
-          {r.ingredients.map((item: string, i: number) => <li key={i}>{item}</li>)}
-        </ul>
-      </section>
+      <ServingsView
+        base={baseServings(r.servings)}
+        ingredients={r.ingredients}
+        method={r.method}
+        nutrition={nutrition}
+      />
 
-      <section className="mt-8">
-        <h2 className="text-xl font-semibold">Method</h2>
-        <ol className="mt-3 list-decimal space-y-3 pl-5">
-          {r.method.map((step: string, i: number) => <li key={i}>{step}</li>)}
-        </ol>
-      </section>
-
-      {nutrition.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-xl font-semibold">Nutrition per serving</h2>
-          <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-3">
-            {nutrition.map(([label, value]) => (
-              <div key={label} className="flex justify-between border-b border-stone-200 py-1">
-                <dt>{label}</dt>
-                <dd className="text-stone-600">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      )}
+      <CostPanel id={r.id} cost={r.cost ?? null} />
 
       <footer className="mt-10 flex flex-wrap items-center gap-4 text-sm">
         {r.source_url && (
