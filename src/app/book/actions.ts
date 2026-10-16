@@ -6,6 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { cleanUrl, ImportError, recipeFromHtml } from "@/lib/import/fetch";
 import { recipeFromText } from "@/lib/import/ai";
 import type { ImportedRecipe } from "@/lib/import/parse";
+import { costRecipe, type PriceRow } from "@/lib/prices/cost";
+import { PriceError } from "@/lib/prices/receipt";
+import { baseServings } from "@/lib/servings/scale";
 
 export type ImportState = { error: string | null; blocked?: boolean };
 
@@ -106,4 +109,36 @@ export async function deleteRecipe(id: string) {
   await supabase.from("recipes").delete().eq("id", id);
   revalidatePath("/book");
   redirect("/book");
+}
+
+export async function deletePrice(id: string) {
+  const supabase = await createClient();
+  await supabase.from("prices").delete().eq("id", id);
+  revalidatePath("/book/prices");
+}
+
+export type CostState = { error: string | null };
+
+/** Estimate a recipe's cost from the latest price of each item on the person's price list. */
+export async function priceRecipe(id: string): Promise<CostState> {
+  const supabase = await createClient();
+  const [{ data: recipe }, { data: rows }] = await Promise.all([
+    supabase.from("recipes").select("ingredients, servings").eq("id", id).maybeSingle(),
+    supabase.from("prices").select("item, pack_size, price_pence").order("created_at", { ascending: false }).limit(1000),
+  ]);
+  if (!recipe) return { error: "We couldn't find that recipe." };
+  const latest = new Map<string, PriceRow>();
+  for (const row of rows ?? []) {
+    const key = row.item.trim().toLowerCase();
+    if (!latest.has(key)) latest.set(key, row);
+  }
+  try {
+    const cost = await costRecipe(recipe.ingredients, [...latest.values()].slice(0, 400), baseServings(recipe.servings));
+    await supabase.from("recipes").update({ cost }).eq("id", id);
+  } catch (e) {
+    if (e instanceof PriceError) return { error: e.message };
+    throw e;
+  }
+  revalidatePath(`/book/${id}`);
+  return { error: null };
 }

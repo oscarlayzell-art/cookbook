@@ -4,6 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { baseServings } from "@/lib/servings/scale";
 import { deleteRecipe } from "../actions";
 import { ServingsView } from "./servings-view";
+import { CostPanel } from "./cost-panel";
+
+// Working out a cost with AI can take a while.
+export const maxDuration = 120;
 
 export default async function RecipePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -48,6 +52,8 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
         method={r.method}
         nutrition={nutrition}
       />
+
+      <CostPanel id={r.id} cost={r.cost ?? null} />
 
       <footer className="mt-10 flex flex-wrap items-center gap-4 text-sm">
         {r.source_url && (
