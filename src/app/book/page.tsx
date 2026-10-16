@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AddRecipeForm } from "./add-recipe-form";
+import { RecipeList, type ListRecipe } from "./recipe-list";
 
 export default async function BookPage() {
   const supabase = await createClient();
@@ -12,7 +13,8 @@ export default async function BookPage() {
 
   const { data: recipes } = await supabase
     .from("recipes")
-    .select("id, title, image_url, total_time")
+    // "*" so the list still loads if a newer column has not been added to the database yet.
+    .select("*")
     .order("created_at", { ascending: false });
 
   return (
@@ -25,24 +27,7 @@ export default async function BookPage() {
       {!recipes?.length ? (
         <p className="mt-10 text-stone-600">No recipes yet. Paste a link above to add your first.</p>
       ) : (
-        <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {recipes.map((r) => (
-            <li key={r.id}>
-              <Link href={`/book/${r.id}`} className="block overflow-hidden rounded-lg border border-stone-200 bg-white hover:shadow">
-                {r.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={r.image_url} alt="" className="aspect-[4/3] w-full object-cover" />
-                ) : (
-                  <div className="aspect-[4/3] w-full bg-stone-100" />
-                )}
-                <div className="p-3">
-                  <h2 className="font-medium">{r.title}</h2>
-                  {r.total_time && <p className="text-sm text-stone-500">{r.total_time}</p>}
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <RecipeList recipes={recipes as ListRecipe[]} />
       )}
     </main>
   );

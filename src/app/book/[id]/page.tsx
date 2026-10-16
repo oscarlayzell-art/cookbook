@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { baseServings } from "@/lib/servings/scale";
 import { deleteRecipe } from "../actions";
 import { ServingsView } from "./servings-view";
-import { CostPanel } from "./cost-panel";
+import { RatingPicker } from "./rating-picker";
 
 // Working out a cost with AI can take a while.
 export const maxDuration = 120;
@@ -34,6 +34,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
           <span key={label}>{label}: {v}</span>
         ))}
       </div>
+      <RatingPicker id={r.id} rating={r.rating ?? null} />
       {r.image_url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={r.image_url} alt="" className="mt-6 w-full rounded-lg object-cover" />
@@ -47,13 +48,16 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
       )}
 
       <ServingsView
+        id={r.id}
         base={baseServings(r.servings)}
+        savedPortions={r.portions ?? null}
+        savedMode={r.portion_mode === "split" ? "split" : "cook"}
+        savedOptional={r.optional_ingredients ?? []}
         ingredients={r.ingredients}
         method={r.method}
         nutrition={nutrition}
+        cost={r.cost ?? null}
       />
-
-      <CostPanel id={r.id} cost={r.cost ?? null} />
 
       <footer className="mt-10 flex flex-wrap items-center gap-4 text-sm">
         {r.source_url && (

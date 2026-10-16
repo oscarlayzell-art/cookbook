@@ -5,9 +5,34 @@ import { useActionState } from "react";
 import { formatPence, type RecipeCost } from "@/lib/prices/format";
 import { priceRecipe, type CostState } from "../actions";
 
-export function CostPanel({ id, cost }: { id: string; cost: RecipeCost | null }) {
+const norm = (s: string) => s.trim().toLowerCase();
+
+export function CostPanel({
+  id,
+  cost,
+  ingredients,
+  optional,
+  portions,
+  ingredientFactor,
+}: {
+  id: string;
+  cost: RecipeCost | null;
+  ingredients: string[];
+  optional: Set<number>;
+  /** Portions currently chosen, or null when the recipe doesn't say how many it serves. */
+  portions: number | null;
+  ingredientFactor: number;
+}) {
   const [state, action, pending] = useActionState<CostState>(() => priceRecipe(id), { error: null });
   const unmatched = cost?.lines.filter((l) => l.cost_pence === null) ?? [];
+
+  // Leave out ingredients marked optional. Cost lines usually follow the ingredients list one for one.
+  const optionalText = new Set([...optional].map((i) => norm(ingredients[i] ?? "")));
+  const isOptional = (line: { ingredient: string }, i: number) =>
+    cost?.lines.length === ingredients.length ? optional.has(i) : optionalText.has(norm(line.ingredient));
+  const counted = cost?.lines.filter((l, i) => !isOptional(l, i)) ?? [];
+  const total = counted.reduce((sum, l) => sum + (l.cost_pence ?? 0), 0) * ingredientFactor;
+  const left = (cost?.lines.length ?? 0) - counted.length;
 
   return (
     <section className="mt-8">
@@ -15,17 +40,22 @@ export function CostPanel({ id, cost }: { id: string; cost: RecipeCost | null })
       {cost ? (
         <>
           <p className="mt-2 text-lg">
-            {cost.servings ? (
+            {portions ? (
               <>
-                About <strong>{formatPence(cost.total_pence / cost.servings)}</strong> per portion{" "}
+                About <strong>{formatPence(total / portions)}</strong> per portion{" "}
                 <span className="text-base text-stone-600">
-                  ({formatPence(cost.total_pence)} for {cost.servings})
+                  ({formatPence(total)} for {portions})
                 </span>
               </>
             ) : (
-              <>About <strong>{formatPence(cost.total_pence)}</strong> for the whole recipe</>
+              <>About <strong>{formatPence(total)}</strong> for the whole recipe</>
             )}
           </p>
+          {left > 0 && (
+            <p className="mt-1 text-sm text-stone-500">
+              Leaving out {left} optional ingredient{left === 1 ? "" : "s"}.
+            </p>
+          )}
           {unmatched.length > 0 && (
             <p className="mt-1 text-sm text-stone-500">
               Not counted, as they&apos;re not on your price list yet: {unmatched.map((l) => l.ingredient).join("; ")}.
@@ -34,7 +64,7 @@ export function CostPanel({ id, cost }: { id: string; cost: RecipeCost | null })
           <details className="mt-2 text-sm">
             <summary className="cursor-pointer text-orange-800">How we worked it out</summary>
             <ul className="mt-2 space-y-1">
-              {cost.lines
+              {counted
                 .filter((l) => l.cost_pence !== null)
                 .map((l, i) => (
                   <li key={i} className="flex justify-between gap-4 border-b border-stone-200 py-1">

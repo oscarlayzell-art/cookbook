@@ -46,5 +46,15 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Signed-in people go straight to their cookbook rather than the welcome or sign-in page.
+  if (user && (path === "/" || path === "/login")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/book";
+    const redirect = NextResponse.redirect(url);
+    // Keep any refreshed session cookies.
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
+  }
+
   return response;
 }

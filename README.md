@@ -25,6 +25,8 @@ Built with Next.js, hosted on Vercel, with Supabase for sign-in and the database
 6. **Receipts and recipe costs** (needs the key from step 5): in the Supabase SQL editor, run
    `supabase/migrations/0002_prices.sql`. People can then upload receipts on the My prices page
    and see a cost per portion on each recipe.
+7. **Ratings, saved portions and optional ingredients**: in the Supabase SQL editor, run
+   `supabase/migrations/0003_rating_portions.sql`.
 
 ## Local development
 
