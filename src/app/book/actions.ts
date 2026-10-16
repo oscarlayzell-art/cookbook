@@ -142,3 +142,36 @@ export async function priceRecipe(id: string): Promise<CostState> {
   revalidatePath(`/book/${id}`);
   return { error: null };
 }
+
+const RATINGS = ["daily", "weekly", "monthly", "annually"] as const;
+export type Rating = (typeof RATINGS)[number];
+
+/** Save how often the person cooks this recipe, or clear it. */
+export async function setRating(id: string, rating: string | null) {
+  const value = RATINGS.includes(rating as Rating) ? rating : null;
+  const supabase = await createClient();
+  await supabase.from("recipes").update({ rating: value }).eq("id", id);
+  revalidatePath("/book");
+  revalidatePath(`/book/${id}`);
+}
+
+/** Remember the portions the person makes, and whether that scales the ingredients or splits the same food. */
+export async function savePortions(id: string, portions: number | null, mode: "cook" | "split") {
+  const supabase = await createClient();
+  await supabase
+    .from("recipes")
+    .update({
+      portions: portions && portions > 0 ? Math.round(portions) : null,
+      portion_mode: mode === "split" ? "split" : "cook",
+    })
+    .eq("id", id);
+  revalidatePath(`/book/${id}`);
+}
+
+/** Remember which ingredients the person leaves out. */
+export async function setOptionalIngredients(id: string, indices: number[]) {
+  const supabase = await createClient();
+  const clean = [...new Set(indices.filter((i) => Number.isInteger(i) && i >= 0))].sort((a, b) => a - b);
+  await supabase.from("recipes").update({ optional_ingredients: clean }).eq("id", id);
+  revalidatePath(`/book/${id}`);
+}
