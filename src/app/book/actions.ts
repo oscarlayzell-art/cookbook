@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { cleanUrl, importRecipe, ImportError, recipeFromHtml } from "@/lib/import/fetch";
+import { cleanUrl, ImportError, recipeFromHtml } from "@/lib/import/fetch";
 import { recipeFromText } from "@/lib/import/ai";
 import type { ImportedRecipe } from "@/lib/import/parse";
 
@@ -24,22 +24,6 @@ async function saveRecipe(supabase: Supabase, url: string | null, recipe: Import
     .single();
   if (error) throw new ImportError("We found the recipe but couldn't save it. Please try again.");
   return data.id as string;
-}
-
-export async function addRecipeFromUrl(_prev: ImportState, formData: FormData): Promise<ImportState> {
-  const supabase = await createClient();
-  let id: string;
-  try {
-    const url = cleanUrl(String(formData.get("url") ?? ""));
-    const existing = await existingRecipeId(supabase, url);
-    if (existing) redirect(`/book/${existing}`);
-    id = await saveRecipe(supabase, url, await importRecipe(url));
-  } catch (e) {
-    if (e instanceof ImportError) return { error: e.message, blocked: e.blocked };
-    throw e;
-  }
-  revalidatePath("/book");
-  redirect(`/book/${id}`);
 }
 
 /** Save a recipe from page content the Save to Cook Book bookmarklet sent from the user's own browser. */
