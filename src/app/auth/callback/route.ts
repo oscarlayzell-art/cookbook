@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// Confirmation and password-reset emails land here; exchange the code for a session, then carry on.
+// Sign-in links from emails land here; exchange the code for a session, then carry on.
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");

@@ -21,7 +21,10 @@ export default async function BookPage() {
     <main className="mx-auto max-w-4xl px-4 py-12">
       <div className="flex items-baseline justify-between gap-4">
         <h1 className="text-3xl font-semibold">My cookbook</h1>
-        <Link href="/book/prices" className="text-sm text-orange-800 underline">My prices</Link>
+        <div className="flex gap-4 text-sm text-orange-800">
+          <Link href="/book/prices" className="underline">My prices</Link>
+          <Link href="/account" className="underline">My account</Link>
+        </div>
       </div>
       <AddRecipeForm />
       {!recipes?.length ? (

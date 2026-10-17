@@ -1,6 +1,7 @@
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { aiErrorMessage, claudeClient, MODEL } from "@/lib/ai/claude";
+import { withAiAllowance } from "@/lib/ai/usage";
 import { ImportError } from "./fetch";
 import type { ImportedRecipe } from "./parse";
 
@@ -30,12 +31,14 @@ export async function recipeFromText(pasted: string): Promise<ImportedRecipe> {
   }
   let response;
   try {
-    response = await client.messages.parse({
-      model: MODEL,
-      max_tokens: 16000,
-      messages: [{ role: "user", content: `${PROMPT}\n\n<page_text>\n${pasted}\n</page_text>` }],
-      output_config: { format: zodOutputFormat(RecipeSchema) },
-    });
+    response = await withAiAllowance("paste", () =>
+      client.messages.parse({
+        model: MODEL,
+        max_tokens: 16000,
+        messages: [{ role: "user", content: `${PROMPT}\n\n<page_text>\n${pasted}\n</page_text>` }],
+        output_config: { format: zodOutputFormat(RecipeSchema) },
+      }),
+    );
   } catch (e) {
     console.error("AI recipe extraction failed", e);
     throw new ImportError(aiErrorMessage(e));

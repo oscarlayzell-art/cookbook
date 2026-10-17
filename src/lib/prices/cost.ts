@@ -1,6 +1,7 @@
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { aiErrorMessage, claudeClient, MODEL } from "@/lib/ai/claude";
+import { withAiAllowance } from "@/lib/ai/usage";
 import type { RecipeCost } from "./format";
 import { PriceError } from "./receipt";
 
@@ -41,17 +42,19 @@ export async function costRecipe(
     .join("\n");
   let response;
   try {
-    response = await client.messages.parse({
-      model: MODEL,
-      max_tokens: 16000,
-      messages: [
-        {
-          role: "user",
-          content: `${PROMPT}\n\n<prices>\n${priceList}\n</prices>\n\n<ingredients>\n${ingredients.join("\n")}\n</ingredients>`,
-        },
-      ],
-      output_config: { format: zodOutputFormat(CostSchema) },
-    });
+    response = await withAiAllowance("cost", () =>
+      client.messages.parse({
+        model: MODEL,
+        max_tokens: 16000,
+        messages: [
+          {
+            role: "user",
+            content: `${PROMPT}\n\n<prices>\n${priceList}\n</prices>\n\n<ingredients>\n${ingredients.join("\n")}\n</ingredients>`,
+          },
+        ],
+        output_config: { format: zodOutputFormat(CostSchema) },
+      }),
+    );
   } catch (e) {
     console.error("AI costing failed", e);
     throw new PriceError(aiErrorMessage(e));
