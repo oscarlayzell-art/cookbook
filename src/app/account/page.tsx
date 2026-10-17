@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { formatPence, weeklySpendPence, WEEKLY_LIMIT_PENCE } from "@/lib/ai/usage";
+import { weeklySpendByFeature, WEEKLY_LIMIT_PENCE } from "@/lib/ai/usage";
 import { getAccess } from "@/lib/billing/server";
 import { signOut } from "./actions";
+import { AiRing } from "./ai-ring";
 
 const PROBLEMS: Record<string, string> = {
   "not-set-up": "Subscriptions aren't switched on yet. Ask Oscar to finish setting up payments.",
@@ -28,8 +29,7 @@ export default async function AccountPage({
 
   const access = await getAccess();
   // Before the AI usage table exists, show the allowance as unused rather than failing the page.
-  const spent = await weeklySpendPence().catch(() => 0);
-  const share = Math.min(1, spent / WEEKLY_LIMIT_PENCE);
+  const byFeature = await weeklySpendByFeature().catch(() => ({}));
   const button = "rounded-md bg-orange-700 px-4 py-2 font-medium text-white";
 
   return (
@@ -82,16 +82,8 @@ export default async function AccountPage({
 
       <section className="mt-8">
         <h2 className="text-lg font-semibold">AI this week</h2>
-        <p className="mt-1 text-stone-700">
-          Pasting recipes, reading receipts and costing recipes use AI. You can use up to{" "}
-          {formatPence(WEEKLY_LIMIT_PENCE)} in any 7 days.
-        </p>
-        <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-stone-200">
-          <div className="h-full bg-orange-700" style={{ width: `${share * 100}%` }} />
-        </div>
-        <p className="mt-1 text-sm text-stone-600">
-          {formatPence(spent)} used, {formatPence(Math.max(0, WEEKLY_LIMIT_PENCE - spent))} left
-        </p>
+        <p className="mt-1 text-stone-700">Pasting recipes, reading receipts and costing recipes use AI.</p>
+        <AiRing byFeature={byFeature} limit={WEEKLY_LIMIT_PENCE} />
       </section>
 
       <form action={signOut} className="mt-10">
