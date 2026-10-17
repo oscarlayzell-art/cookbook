@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseConfigProblem, supabaseKey, supabaseUrl } from "./config";
 
-const PUBLIC_PATHS = ["/", "/login", "/auth"];
+const PUBLIC_PATHS = ["/", "/login", "/auth", "/api/stripe/webhook"];
 
 export async function updateSession(request: NextRequest) {
   const problem = supabaseConfigProblem();

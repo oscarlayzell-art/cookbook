@@ -1,4 +1,5 @@
 import { createClient } from "../supabase/server";
+import { getAccess } from "../billing/server";
 import { MODEL } from "./claude";
 
 /** Each person can spend this much on AI in any 7 days, in pence. */
@@ -53,6 +54,9 @@ export async function weeklySpendPence(): Promise<number> {
  * A request that starts just under the limit can take someone slightly over it.
  */
 export async function withAiAllowance<T extends { usage: Usage }>(feature: string, call: () => Promise<T>): Promise<T> {
+  if (!(await getAccess()).canEdit) {
+    throw new AiLimitError("AI features need a subscription. Subscribe for £5 a month on the My account page.");
+  }
   const spent = await weeklySpendPence();
   if (spent >= WEEKLY_LIMIT_PENCE) {
     throw new AiLimitError(

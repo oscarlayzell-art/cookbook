@@ -39,6 +39,20 @@ Built with Next.js, hosted on Vercel, with Supabase for sign-in and the database
     add the code to the email, e.g. `<p>Or type this code: {{ .Token }}</p>`, so people can sign
     in on a different device from the one that got the email.
 
+11. **Subscriptions (£5 a month)**: run `supabase/migrations/0006_subscriptions.sql`. Everyone who
+    already has an account, or was invited before then, gets a free friends and family place. To
+    invite someone else free, use `insert into public.invites (email, comped) values ('them@example.com', true);`.
+    People without a free place or a subscription can read their cookbook but not change it.
+    Then in Stripe (stripe.com):
+    - Product catalogue > Add product: "Cook Book", £5.00, recurring monthly. Copy its price ID (`price_…`).
+    - Settings > Billing > Customer portal: turn it on and allow cancelling (at the end of the period).
+    - Developers > Webhooks > Add endpoint: `https://<your-site>/api/stripe/webhook`, with events
+      `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`
+      and `customer.subscription.deleted`. Copy its signing secret (`whsec_…`).
+    - In Vercel add `STRIPE_SECRET_KEY` (Developers > API keys), `STRIPE_PRICE_ID`,
+      `STRIPE_WEBHOOK_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY` (Supabase > Project Settings > API),
+      then redeploy.
+
 ## Local development
 
 ```bash

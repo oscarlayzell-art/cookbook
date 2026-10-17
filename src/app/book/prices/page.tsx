@@ -3,9 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { formatPence } from "@/lib/prices/format";
 import { deletePrice } from "../actions";
 import { ReceiptUpload } from "./receipt-upload";
+import { getAccess } from "@/lib/billing/server";
+import { ReadOnlyBanner } from "../../read-only-banner";
 
 export default async function PricesPage() {
   const supabase = await createClient();
+  const { canEdit } = await getAccess();
   const { data: prices } = await supabase
     .from("prices")
     .select("id, item, pack_size, price_pence, shop, bought_on")
@@ -20,7 +23,7 @@ export default async function PricesPage() {
         Upload your shopping receipts and we&apos;ll keep a list of what things cost you. Each recipe can then
         show roughly what it costs per portion.
       </p>
-      <ReceiptUpload />
+      {canEdit ? <ReceiptUpload /> : <ReadOnlyBanner />}
 
       {!prices?.length ? (
         <p className="mt-8 text-stone-600">No prices yet. Upload a receipt to get started.</p>
@@ -45,9 +48,11 @@ export default async function PricesPage() {
                   {[p.shop, p.bought_on].filter(Boolean).join(", ")}
                 </td>
                 <td className="py-2 pl-2 text-right">
-                  <form action={deletePrice.bind(null, p.id)}>
-                    <button aria-label={`Remove ${p.item}`} className="text-stone-400 hover:text-red-700">×</button>
-                  </form>
+                  {canEdit && (
+                    <form action={deletePrice.bind(null, p.id)}>
+                      <button aria-label={`Remove ${p.item}`} className="text-stone-400 hover:text-red-700">×</button>
+                    </form>
+                  )}
                 </td>
               </tr>
             ))}

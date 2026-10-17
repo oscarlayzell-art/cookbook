@@ -9,6 +9,8 @@ import type { ImportedRecipe } from "@/lib/import/parse";
 import { costRecipe, type PriceRow } from "@/lib/prices/cost";
 import { PriceError } from "@/lib/prices/receipt";
 import { baseServings } from "@/lib/servings/scale";
+import { getAccess } from "@/lib/billing/server";
+import { READ_ONLY_MESSAGE } from "@/lib/billing/access";
 
 export type ImportState = { error: string | null; blocked?: boolean };
 
@@ -20,6 +22,7 @@ async function existingRecipeId(supabase: Supabase, url: string) {
 }
 
 async function saveRecipe(supabase: Supabase, url: string | null, recipe: ImportedRecipe) {
+  if (!(await getAccess()).canEdit) throw new ImportError(READ_ONLY_MESSAGE);
   const { data, error } = await supabase
     .from("recipes")
     .insert({ ...recipe, source_url: url })
