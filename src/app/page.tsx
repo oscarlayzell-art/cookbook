@@ -167,6 +167,16 @@ export default function Home() {
               </p>
             </div>
           </div>
+          <div className="mx-auto mt-6 flex max-w-3xl items-start gap-4 rounded-3xl bg-amber-50 p-6">
+            <span className="text-3xl" aria-hidden>📈</span>
+            <div>
+              <h3 className="text-lg font-semibold text-sky-950">Track prices</h3>
+              <p className="mt-1 text-slate-600">
+                Halo remembers what you&apos;ve paid for every item, so in the supermarket you can see at a glance
+                whether today&apos;s price is a good one.
+              </p>
+            </div>
+          </div>
         </section>
 
         {/* How it works */}
