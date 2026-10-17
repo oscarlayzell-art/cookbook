@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { PasteForm } from "./paste-form";
+import { getAccess } from "@/lib/billing/server";
+import { ReadOnlyBanner } from "../../read-only-banner";
 
 // Reading a long page with AI can take a while.
 export const maxDuration = 120;
 
-export default function PastePage() {
+export default async function PastePage() {
+  const { canEdit } = await getAccess();
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">
       <Link href="/book" className="text-sm text-orange-800">← My cookbook</Link>
@@ -17,7 +20,7 @@ export default function PastePage() {
         <li>Copy it, come back here and paste it in below.</li>
         <li>We&apos;ll pick out the ingredients, method and nutrition for you. Check it over afterwards and use Edit if anything is off.</li>
       </ol>
-      <PasteForm />
+      {canEdit ? <PasteForm /> : <ReadOnlyBanner />}
     </main>
   );
 }

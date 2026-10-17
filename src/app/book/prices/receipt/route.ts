@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { PriceError, readReceipt } from "@/lib/prices/receipt";
+import { getAccess } from "@/lib/billing/server";
+import { READ_ONLY_MESSAGE } from "@/lib/billing/access";
 
 export type ReceiptResult = { added: number; shop: string | null } | { error: string };
 
@@ -16,6 +18,7 @@ export async function POST(request: Request) {
     if (!(file instanceof File) || !file.size) throw new PriceError("Choose a photo or PDF of your receipt.");
     if (file.size > 4_000_000) throw new PriceError("That file is too big. Try a smaller photo or PDF (under 4MB).");
 
+    if (!(await getAccess()).canEdit) throw new PriceError(READ_ONLY_MESSAGE);
     const receipt = await readReceipt(file);
     const supabase = await createClient();
     const boughtOn = /^\d{4}-\d{2}-\d{2}$/.test(receipt.bought_on ?? "") ? receipt.bought_on : null;

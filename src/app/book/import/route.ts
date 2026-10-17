@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { cleanUrl, importRecipe, ImportError } from "@/lib/import/fetch";
+import { getAccess } from "@/lib/billing/server";
+import { READ_ONLY_MESSAGE } from "@/lib/billing/access";
 
 export type ImportResult =
   | { id: string; title: string; existing: boolean }
@@ -26,6 +28,7 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (existing) return reply({ id: existing.id, title: existing.title, existing: true });
 
+    if (!(await getAccess()).canEdit) throw new ImportError(READ_ONLY_MESSAGE);
     const recipe = await importRecipe(url);
     const { data, error } = await supabase
       .from("recipes")

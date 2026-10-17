@@ -1,6 +1,7 @@
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { aiErrorMessage, claudeClient, MODEL } from "@/lib/ai/claude";
+import { withAiAllowance } from "@/lib/ai/usage";
 
 export class PriceError extends Error {}
 
@@ -40,22 +41,24 @@ export async function readReceipt(file: File): Promise<ReceiptItems> {
   const source = { type: "base64" as const, data };
   let response;
   try {
-    response = await client.messages.parse({
-      model: MODEL,
-      max_tokens: 16000,
-      messages: [
-        {
-          role: "user",
-          content: [
-            mediaType === "application/pdf"
-              ? { type: "document", source: { ...source, media_type: "application/pdf" } }
-              : { type: "image", source: { ...source, media_type: mediaType } },
-            { type: "text", text: PROMPT },
-          ],
-        },
-      ],
-      output_config: { format: zodOutputFormat(ReceiptSchema) },
-    });
+    response = await withAiAllowance("receipt", () =>
+      client.messages.parse({
+        model: MODEL,
+        max_tokens: 16000,
+        messages: [
+          {
+            role: "user",
+            content: [
+              mediaType === "application/pdf"
+                ? { type: "document", source: { ...source, media_type: "application/pdf" } }
+                : { type: "image", source: { ...source, media_type: mediaType } },
+              { type: "text", text: PROMPT },
+            ],
+          },
+        ],
+        output_config: { format: zodOutputFormat(ReceiptSchema) },
+      }),
+    );
   } catch (e) {
     console.error("AI receipt reading failed", e);
     throw new PriceError(aiErrorMessage(e));

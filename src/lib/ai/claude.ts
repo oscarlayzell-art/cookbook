@@ -11,6 +11,8 @@ export function claudeClient(): Anthropic | null {
 
 /** Explain a failed Claude call in words the person can act on. */
 export function aiErrorMessage(e: unknown) {
+  // The weekly allowance message is already written for people.
+  if (e instanceof Error && e.name === "AiLimitError") return e.message;
   if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError)
     return "The AI key isn't working. Check ANTHROPIC_API_KEY in Vercel, then redeploy.";
   if (e instanceof Anthropic.APIError && /credit balance/i.test(e.message))

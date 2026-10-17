@@ -1,27 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseUrl } from "@/lib/supabase/config";
-
-type Mode = "signin" | "signup" | "reset";
-
-const TITLES: Record<Mode, string> = {
-  signin: "Sign in",
-  signup: "Create your account",
-  reset: "Reset your password",
-};
 
 function friendlyError(message: string) {
   // Supabase reports our invite check as a generic "Database error saving new user".
   if (/invite-only|database error saving new user/i.test(message))
     return "This cookbook is invite-only for now. Ask Oscar for an invite.";
-  if (/invalid login credentials/i.test(message))
-    return "That email and password don't match. If you used to sign in with an email link, choose \"Forgot your password?\" to set one.";
-  if (/email not confirmed/i.test(message))
-    return "Please confirm your email first. Check your inbox for the link we sent.";
-  if (/already registered/i.test(message)) return "You already have an account. Sign in instead.";
+  if (/rate limit|too many|only request this after/i.test(message))
+    return "We've sent a lot of sign-in emails just now. Please wait a minute and try again.";
+  if (/token has expired|invalid|otp/i.test(message))
+    return "That code didn't work. It may have expired, so ask for a new email and use the newest code.";
   if (message === "Failed to fetch")
     return `Couldn't reach the sign-in service at ${supabaseUrl}. Check NEXT_PUBLIC_SUPABASE_URL in Vercel, or try turning off any ad or tracker blocker.`;
   return message;
@@ -29,114 +20,91 @@ function friendlyError(message: string) {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  function switchTo(next: Mode) {
-    setMode(next);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("error") === "link") {
+      setError("That sign-in link didn't work. It may have expired or been opened in a different browser. Ask for a new one below.");
+    }
+  }, []);
+
+  async function sendEmail(e?: React.FormEvent) {
+    e?.preventDefault();
+    setBusy(true);
     setError(null);
-    setNotice(null);
+    const { error } = await createClient().auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    setBusy(false);
+    if (error) return setError(friendlyError(error.message));
+    setSent(true);
   }
 
-  async function submit(e: React.FormEvent) {
+  async function verifyCode(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const auth = createClient().auth;
-    const origin = window.location.origin;
-    let result;
-    if (mode === "signin") {
-      result = await auth.signInWithPassword({ email, password });
-    } else if (mode === "signup") {
-      result = await auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${origin}/auth/callback` },
-      });
-    } else {
-      result = await auth.resetPasswordForEmail(email, {
-        redirectTo: `${origin}/auth/callback?next=/account/password`,
-      });
-    }
+    const { error } = await createClient().auth.verifyOtp({ email, token: code.trim(), type: "email" });
     setBusy(false);
-    if (result.error) {
-      setError(friendlyError(result.error.message));
-      return;
-    }
-    if (mode === "reset") {
-      setNotice(`Check your inbox. We sent a link to ${email} to set a new password.`);
-    } else if (mode === "signup" && !("session" in result.data && result.data.session)) {
-      setNotice(`Check your inbox. We sent a link to ${email} to confirm your account.`);
-    } else {
-      router.push("/book");
-      router.refresh();
-    }
+    if (error) return setError(friendlyError(error.message));
+    router.push("/book");
+    router.refresh();
   }
+
+  const input = "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-900";
+  const button = "w-full rounded-md bg-orange-700 px-4 py-2 font-medium text-white disabled:opacity-60";
 
   return (
     <main className="mx-auto max-w-sm px-4 py-24">
-      <h1 className="text-3xl font-semibold">{TITLES[mode]}</h1>
-      {notice ? (
-        <p className="mt-6">{notice}</p>
-      ) : (
-        <form onSubmit={submit} className="mt-6 space-y-4">
+      <h1 className="text-3xl font-semibold">{sent ? "Check your inbox" : "Sign in"}</h1>
+      {!sent ? (
+        <form onSubmit={sendEmail} className="mt-6 space-y-4">
+          <p className="text-stone-700">Enter your email and we&apos;ll send you a sign-in link. No password needed.</p>
           <label className="block">
             <span className="text-sm">Email</span>
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-900"
-            />
+            <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} />
           </label>
-          {mode !== "reset" && (
-            <label className="block">
-              <span className="text-sm">Password</span>
-              <input
-                type="password"
-                required
-                minLength={8}
-                autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-900"
-              />
-              {mode === "signup" && <span className="text-xs text-stone-500">At least 8 characters.</span>}
-            </label>
-          )}
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-md bg-orange-700 px-4 py-2 font-medium text-white disabled:opacity-60"
-          >
-            {busy ? "One moment…" : mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Email me a reset link"}
+          <button type="submit" disabled={busy} className={button}>
+            {busy ? "Sending…" : "Email me a sign-in link"}
           </button>
           {error && <p className="text-sm text-red-700">{error}</p>}
         </form>
-      )}
-      <div className="mt-6 space-y-1 text-sm text-orange-800">
-        {mode !== "signin" && (
-          <button type="button" onClick={() => switchTo("signin")} className="block underline">
-            Back to sign in
+      ) : (
+        <form onSubmit={verifyCode} className="mt-6 space-y-4">
+          <p className="text-stone-700">
+            We sent an email to <strong>{email}</strong>. Click the link in it, or type the code from the email here.
+          </p>
+          <label className="block">
+            <span className="text-sm">Code from the email</span>
+            <input
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{6,10}"
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              className={`${input} tracking-widest`}
+            />
+          </label>
+          <button type="submit" disabled={busy} className={button}>
+            {busy ? "Checking…" : "Sign in"}
           </button>
-        )}
-        {mode === "signin" && (
-          <>
-            <button type="button" onClick={() => switchTo("signup")} className="block underline">
-              New here? Create an account
+          {error && <p className="text-sm text-red-700">{error}</p>}
+          <div className="space-y-1 text-sm text-orange-800">
+            <button type="button" disabled={busy} onClick={() => sendEmail()} className="block underline">
+              Send another email
             </button>
-            <button type="button" onClick={() => switchTo("reset")} className="block underline">
-              Forgot your password?
+            <button type="button" onClick={() => { setSent(false); setCode(""); setError(null); }} className="block underline">
+              Use a different email
             </button>
-          </>
-        )}
-      </div>
+          </div>
+        </form>
+      )}
     </main>
   );
 }

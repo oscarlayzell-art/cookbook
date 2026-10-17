@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getAccess } from "@/lib/billing/server";
 import { createClient } from "@/lib/supabase/server";
 import { updateRecipe } from "../../actions";
 
@@ -7,6 +8,7 @@ const field = "mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2
 
 export default async function EditRecipePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  if (!(await getAccess()).canEdit) redirect(`/book/${id}`);
   const supabase = await createClient();
   const { data: r } = await supabase.from("recipes").select("*").eq("id", id).maybeSingle();
   if (!r) notFound();
