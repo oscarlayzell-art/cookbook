@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseUrl } from "@/lib/supabase/config";
+import Link from "next/link";
+import { Logo } from "../logo";
 
 function friendlyError(message: string) {
   // Supabase reports our invite check as a generic "Database error saving new user".
@@ -58,59 +60,66 @@ export default function LoginPage() {
     router.refresh();
   }
 
-  const input = "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-900";
-  const button = "w-full rounded-md bg-orange-700 px-4 py-2 font-medium text-white disabled:opacity-60";
+  const input = "mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-slate-900";
+  const button = "w-full rounded-full bg-sky-700 px-4 py-2 font-medium text-white disabled:opacity-60";
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-24">
-      <h1 className="text-3xl font-semibold">{sent ? "Check your inbox" : isNew ? "Create your account" : "Sign in"}</h1>
-      {!sent ? (
-        <form onSubmit={sendEmail} className="mt-6 space-y-4">
-          <p className="text-stone-700">
-            {isNew
-              ? "Enter your email and we'll send you a link to get started. No password needed."
-              : "Enter your email and we'll send you a sign-in link. No password needed."}
-          </p>
-          <label className="block">
-            <span className="text-sm">Email</span>
-            <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} />
-          </label>
-          <button type="submit" disabled={busy} className={button}>
-            {busy ? "Sending…" : "Email me a sign-in link"}
-          </button>
-          {error && <p className="text-sm text-red-700">{error}</p>}
-        </form>
-      ) : (
-        <form onSubmit={verifyCode} className="mt-6 space-y-4">
-          <p className="text-stone-700">
-            We sent an email to <strong>{email}</strong>. Click the link in it, or type the code from the email here.
-          </p>
-          <label className="block">
-            <span className="text-sm">Code from the email</span>
-            <input
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="[0-9]{6,10}"
-              required
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              className={`${input} tracking-widest`}
-            />
-          </label>
-          <button type="submit" disabled={busy} className={button}>
-            {busy ? "Checking…" : "Sign in"}
-          </button>
-          {error && <p className="text-sm text-red-700">{error}</p>}
-          <div className="space-y-1 text-sm text-orange-800">
-            <button type="button" disabled={busy} onClick={() => sendEmail()} className="block underline">
-              Send another email
-            </button>
-            <button type="button" onClick={() => { setSent(false); setCode(""); setError(null); }} className="block underline">
-              Use a different email
-            </button>
-          </div>
-        </form>
-      )}
+    <main className="min-h-screen bg-gradient-to-b from-sky-300 via-sky-100 to-[#f5faff] px-4 py-10">
+      <div className="mx-auto max-w-sm">
+        <Link href="/" className="mb-10 flex justify-center">
+          <Logo />
+        </Link>
+        <div className="rounded-3xl bg-white p-7 shadow-xl shadow-sky-900/10 ring-1 ring-sky-100">
+          <h1 className="text-3xl font-semibold">{sent ? "Check your inbox" : isNew ? "Create your account" : "Sign in"}</h1>
+          {!sent ? (
+            <form onSubmit={sendEmail} className="mt-6 space-y-4">
+              <p className="text-slate-700">
+                {isNew
+                  ? "Enter your email and we'll send you a link to get started. No password needed."
+                  : "Enter your email and we'll send you a sign-in link. No password needed."}
+              </p>
+              <label className="block">
+                <span className="text-sm">Email</span>
+                <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} />
+              </label>
+              <button type="submit" disabled={busy} className={button}>
+                {busy ? "Sending…" : "Email me a sign-in link"}
+              </button>
+              {error && <p className="text-sm text-red-700">{error}</p>}
+            </form>
+          ) : (
+            <form onSubmit={verifyCode} className="mt-6 space-y-4">
+              <p className="text-slate-700">
+                We sent an email to <strong>{email}</strong>. Click the link in it, or type the code from the email here.
+              </p>
+              <label className="block">
+                <span className="text-sm">Code from the email</span>
+                <input
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6,10}"
+                  required
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  className={`${input} tracking-widest`}
+                />
+              </label>
+              <button type="submit" disabled={busy} className={button}>
+                {busy ? "Checking…" : "Sign in"}
+              </button>
+              {error && <p className="text-sm text-red-700">{error}</p>}
+              <div className="space-y-1 text-sm text-sky-800">
+                <button type="button" disabled={busy} onClick={() => sendEmail()} className="block underline">
+                  Send another email
+                </button>
+                <button type="button" onClick={() => { setSent(false); setCode(""); setError(null); }} className="block underline">
+                  Use a different email
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
     </main>
   );
 }

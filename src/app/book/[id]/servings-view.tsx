@@ -89,10 +89,10 @@ export function ServingsView({
   return (
     <>
       {base !== null && (
-        <section className="mt-8 rounded-lg border border-stone-200 bg-white p-4">
+        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-4">
           <div className="flex flex-wrap items-center gap-3">
             <span className="font-medium">Portions</span>
-            <div className="flex items-center rounded-md border border-stone-300">
+            <div className="flex items-center rounded-xl border border-slate-300">
               <button
                 onClick={() => setServings((s) => Math.max(1, s - 1))}
                 disabled={servings <= 1}
@@ -111,12 +111,12 @@ export function ServingsView({
               </button>
             </div>
             {changed && (
-              <button onClick={() => setServings(base)} className="text-sm text-orange-800 underline">
+              <button onClick={() => setServings(base)} className="text-sm text-sky-800 underline">
                 Back to the original {base}
               </button>
             )}
           </div>
-          <fieldset className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-stone-700">
+          <fieldset className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-700">
             <legend className="sr-only">How to adjust</legend>
             <label className="flex items-center gap-2">
               <input type="radio" name="mode" checked={mode === "cook"} onChange={() => setMode("cook")} />
@@ -127,7 +127,7 @@ export function ServingsView({
               Same amount, shared differently (change portion size)
             </label>
           </fieldset>
-          <p className="mt-2 text-xs text-stone-500">Your choice is saved for next time.</p>
+          <p className="mt-2 text-xs text-slate-500">Your choice is saved for next time.</p>
         </section>
       )}
 
@@ -140,15 +140,15 @@ export function ServingsView({
               onClick={() => setOrder(ingredients.map((_, i) => i))}
               aria-label="Change the order of the ingredients"
               title="Change the order"
-              className="rounded p-1 text-stone-400 opacity-60 hover:text-stone-700 focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+              className="rounded p-1 text-slate-400 opacity-60 hover:text-slate-700 focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
             >
               ✎
             </button>
           )}
         </div>
         {order && (
-          <div className="mt-3 rounded-lg border border-orange-200 bg-orange-50 p-3">
-            <p className="text-sm text-stone-600">Move ingredients up or down, then save.</p>
+          <div className="mt-3 rounded-2xl border border-sky-200 bg-sky-50 p-3">
+            <p className="text-sm text-slate-600">Move ingredients up or down, then save.</p>
             <ol className="mt-2 space-y-1">
               {order.map((old, at) => (
                 <li key={old} className="flex items-center gap-2 rounded bg-white px-2 py-1">
@@ -159,15 +159,15 @@ export function ServingsView({
               ))}
             </ol>
             <div className="mt-3 flex gap-3">
-              <button type="button" onClick={saveOrder} className="rounded-md bg-orange-700 px-3 py-1.5 text-sm font-medium text-white">Save order</button>
-              <button type="button" onClick={() => setOrder(null)} className="rounded-md border border-stone-300 px-3 py-1.5 text-sm">Cancel</button>
+              <button type="button" onClick={saveOrder} className="rounded-full bg-sky-700 px-3 py-1.5 text-sm font-medium text-white">Save order</button>
+              <button type="button" onClick={() => setOrder(null)} className="rounded-xl border border-slate-300 px-3 py-1.5 text-sm">Cancel</button>
             </div>
           </div>
         )}
         {ingredientFactor !== 1 && (
-          <p className="mt-1 text-sm text-stone-500">Scaled for {servings} from the original {base}. Check tins and packs.</p>
+          <p className="mt-1 text-sm text-slate-500">Scaled for {servings} from the original {base}. Check tins and packs.</p>
         )}
-        <p className="mt-1 text-sm text-stone-500">Tap an ingredient to mark it optional and leave it out of the cost.</p>
+        <p className="mt-1 text-sm text-slate-500">Tap an ingredient to mark it optional and leave it out of the cost.</p>
         <ul className={`mt-3 space-y-1 ${order ? "hidden" : ""}`}>
           {ingredients.map((item, i) => {
             const off = optional.has(i);
@@ -177,7 +177,7 @@ export function ServingsView({
                   type="button"
                   onClick={() => toggleOptional(i)}
                   aria-pressed={off}
-                  className={`flex w-full items-start gap-2 text-left ${off ? "text-stone-400 line-through" : ""}`}
+                  className={`flex w-full items-start gap-2 text-left ${off ? "text-slate-400 line-through" : ""}`}
                 >
                   <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
                   <span>
@@ -202,19 +202,19 @@ export function ServingsView({
         <section className="mt-8">
           <h2 className="text-xl font-semibold">Nutrition per portion</h2>
           {nutritionFactor !== 1 && (
-            <p className="mt-1 text-sm text-stone-500">Each portion is now 1/{servings} of a recipe that serves {base}.</p>
+            <p className="mt-1 text-sm text-slate-500">Each portion is now 1/{servings} of a recipe that serves {base}.</p>
           )}
           {optional.size > 0 && (
-            <p className="mt-1 text-sm text-stone-500">
+            <p className="mt-1 text-sm text-slate-500">
               Includes optional ingredients, as the recipe site only gives a total.
             </p>
           )}
           <table className="mt-3 w-full max-w-md text-sm">
             <tbody>
               {nutrition.map(([label, value]) => (
-                <tr key={label} className="border-b border-stone-200">
+                <tr key={label} className="border-b border-slate-200">
                   <th scope="row" className="py-1.5 pr-4 text-left font-normal">{label}</th>
-                  <td className="py-1.5 text-right tabular-nums text-stone-700">
+                  <td className="py-1.5 text-right tabular-nums text-slate-700">
                     {label === "Serving size" ? value : scaleText(value, nutritionFactor)}
                   </td>
                 </tr>

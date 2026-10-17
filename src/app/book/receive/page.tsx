@@ -23,7 +23,7 @@ export default function ReceivePage() {
 
   if (!page) {
     return (
-      <main className="mx-auto max-w-xl px-4 py-16 text-stone-700">
+      <main className="mx-auto max-w-xl px-4 py-16 text-slate-700">
         Waiting for the recipe… If nothing happens, go back to the recipe page and click Save to Cook Book again.
       </main>
     );
@@ -33,7 +33,7 @@ export default function ReceivePage() {
   return (
     <main className="mx-auto max-w-xl px-4 py-16">
       <h1 className="text-2xl font-semibold">Save this recipe?</h1>
-      <p className="mt-2 break-all text-stone-600">{page.url}</p>
+      <p className="mt-2 break-all text-slate-600">{page.url}</p>
       <button
         disabled={pending}
         onClick={() =>
@@ -42,7 +42,7 @@ export default function ReceivePage() {
             if (result?.error) setError(result.error);
           })
         }
-        className="mt-6 rounded-md bg-orange-700 px-5 py-2 font-medium text-white disabled:opacity-60"
+        className="mt-6 rounded-full bg-sky-700 px-5 py-2 font-medium text-white disabled:opacity-60"
       >
         {pending ? "Saving…" : `Save from ${host}`}
       </button>

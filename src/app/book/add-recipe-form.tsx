@@ -62,13 +62,13 @@ export function AddRecipeForm() {
             type="url"
             required
             placeholder="https://www.bbcgoodfood.com/recipes/…"
-            className="min-w-0 flex-1 rounded-md border border-stone-300 bg-white px-3 py-2"
+            className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2"
           />
-          <button type="submit" className="rounded-md bg-orange-700 px-4 py-2 font-medium text-white">
+          <button type="submit" className="rounded-full bg-sky-700 px-4 py-2 font-medium text-white">
             Save
           </button>
         </div>
-        <p className="mt-2 text-sm text-stone-500">
+        <p className="mt-2 text-sm text-slate-500">
           You can add another link while one is saving. Site won&apos;t let us in?{" "}
           <Link href="/book/save-button" className="underline">Use the Save to Cook Book button</Link> or{" "}
           <Link href="/book/paste" className="underline">paste the recipe</Link>.
@@ -80,8 +80,8 @@ export function AddRecipeForm() {
           {jobs.map((job) => (
             <li
               key={job.key}
-              className={`flex items-start gap-3 rounded-md border px-3 py-2 text-sm ${
-                job.status === "failed" ? "border-red-200 bg-red-50" : "border-stone-200 bg-white"
+              className={`flex items-start gap-3 rounded-xl border px-3 py-2 text-sm ${
+                job.status === "failed" ? "border-red-200 bg-red-50" : "border-slate-200 bg-white"
               }`}
             >
               <StatusIcon status={job.status} />
@@ -89,13 +89,13 @@ export function AddRecipeForm() {
                 {job.status === "saving" && (
                   <>
                     <p className="font-medium">Saving recipe…</p>
-                    <p className="truncate text-stone-500">{job.url}</p>
+                    <p className="truncate text-slate-500">{job.url}</p>
                   </>
                 )}
                 {job.status === "saved" && (
                   <p>
                     {job.existing ? "Already in your cookbook: " : "Saved "}
-                    <Link href={`/book/${job.id}`} className="font-medium text-orange-800 underline">
+                    <Link href={`/book/${job.id}`} className="font-medium text-sky-800 underline">
                       {job.title}
                     </Link>
                   </p>
@@ -103,7 +103,7 @@ export function AddRecipeForm() {
                 {job.status === "failed" && (
                   <>
                     <p className="text-red-800">{job.error}</p>
-                    <p className="truncate text-stone-500">{job.url}</p>
+                    <p className="truncate text-slate-500">{job.url}</p>
                     {job.blocked && (
                       <p className="mt-1">
                         <Link href="/book/save-button" className="underline">Set up the button</Link> or{" "}
@@ -114,7 +114,7 @@ export function AddRecipeForm() {
                 )}
               </div>
               {job.status !== "saving" && (
-                <button onClick={() => dismiss(job.key)} aria-label="Dismiss" className="text-stone-400 hover:text-stone-700">
+                <button onClick={() => dismiss(job.key)} aria-label="Dismiss" className="text-slate-400 hover:text-slate-700">
                   ×
                 </button>
               )}
@@ -131,7 +131,7 @@ function StatusIcon({ status }: { status: Job["status"] }) {
     return (
       <span
         aria-hidden
-        className="mt-0.5 h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-orange-200 border-t-orange-700"
+        className="mt-0.5 h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-sky-200 border-t-sky-700"
       />
     );
   }

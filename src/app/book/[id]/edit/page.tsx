@@ -4,7 +4,7 @@ import { getAccess } from "@/lib/billing/server";
 import { createClient } from "@/lib/supabase/server";
 import { updateRecipe } from "../../actions";
 
-const field = "mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2";
+const field = "mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2";
 
 export default async function EditRecipePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,7 +19,7 @@ export default async function EditRecipePage({ params }: { params: Promise<{ id:
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <Link href={`/book/${r.id}`} className="text-sm text-orange-800">← Back to recipe</Link>
+      <Link href={`/book/${r.id}`} className="text-sm text-sky-800">← Back to recipe</Link>
       <h1 className="mt-3 text-2xl font-semibold">Edit recipe</h1>
       <form action={updateRecipe.bind(null, r.id)} className="mt-6 space-y-5">
         <label className="block">Title<input name="title" defaultValue={r.title} required className={field} /></label>
@@ -39,7 +39,7 @@ export default async function EditRecipePage({ params }: { params: Promise<{ id:
         <label className="block">Tags (comma separated)
           <input name="tags" defaultValue={r.tags.join(", ")} className={field} />
         </label>
-        <button className="rounded-md bg-orange-700 px-5 py-2 font-medium text-white">Save changes</button>
+        <button className="rounded-full bg-sky-700 px-5 py-2 font-medium text-white">Save changes</button>
       </form>
     </main>
   );

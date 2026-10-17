@@ -49,9 +49,9 @@ export function ReceiptUpload() {
   }
 
   return (
-    <div className="mt-6 rounded-lg border border-stone-200 bg-white p-4">
+    <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
       <label
-        className={`inline-flex cursor-pointer items-center gap-2 rounded-md bg-orange-700 px-4 py-2 font-medium text-white ${
+        className={`inline-flex cursor-pointer items-center gap-2 rounded-full bg-sky-700 px-4 py-2 font-medium text-white ${
           busy ? "pointer-events-none opacity-60" : ""
         }`}
       >
@@ -61,7 +61,7 @@ export function ReceiptUpload() {
         {busy ? "Reading receipt…" : "Upload a receipt"}
         <input type="file" accept="image/*,application/pdf" className="sr-only" onChange={onChange} disabled={busy} />
       </label>
-      <p className="mt-2 text-sm text-stone-500">
+      <p className="mt-2 text-sm text-slate-500">
         A photo of a paper receipt or the PDF from an online order. On a phone you can take the photo straight away.
       </p>
       {message && (

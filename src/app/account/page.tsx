@@ -30,35 +30,35 @@ export default async function AccountPage({
   // Before the AI usage table exists, show the allowance as unused rather than failing the page.
   const spent = await weeklySpendPence().catch(() => 0);
   const share = Math.min(1, spent / WEEKLY_LIMIT_PENCE);
-  const button = "rounded-md bg-orange-700 px-4 py-2 font-medium text-white";
+  const button = "rounded-full bg-sky-700 px-4 py-2 font-medium text-white";
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">
-      <Link href="/book" className="text-sm text-orange-800">← My cookbook</Link>
+      <Link href="/book" className="text-sm text-sky-800">← My cookbook</Link>
       <h1 className="mt-3 text-2xl font-semibold">My account</h1>
-      <p className="mt-2 text-stone-700">Signed in as {user.email}</p>
+      <p className="mt-2 text-slate-700">Signed in as {user.email}</p>
 
       <section className="mt-8">
         <h2 className="text-lg font-semibold">Subscription</h2>
         {problem && PROBLEMS[problem] && <p className="mt-2 text-sm text-red-700">{PROBLEMS[problem]}</p>}
         {subscribed && !access.canEdit && (
-          <p className="mt-2 text-sm text-stone-700">Thanks! We&apos;re confirming your payment. Refresh this page in a moment.</p>
+          <p className="mt-2 text-sm text-slate-700">Thanks! We&apos;re confirming your payment. Refresh this page in a moment.</p>
         )}
         {access.kind === "free" && (
-          <p className="mt-1 text-stone-700">You have a free friends and family place, with everything included.</p>
+          <p className="mt-1 text-slate-700">You have a free friends and family place, with everything included.</p>
         )}
         {access.kind === "subscribed" && (
-          <p className="mt-1 text-stone-700">You&apos;re subscribed for £5 a month. It renews on {date(access.periodEnd)}.</p>
+          <p className="mt-1 text-slate-700">You&apos;re subscribed for £5 a month. It renews on {date(access.periodEnd)}.</p>
         )}
         {access.kind === "cancelling" && (
-          <p className="mt-1 text-stone-700">
+          <p className="mt-1 text-slate-700">
             You&apos;ve cancelled. You can keep adding and changing recipes until {date(access.periodEnd)}, then your
             cookbook becomes read-only.
           </p>
         )}
         {access.kind === "none" && (
           <>
-            <p className="mt-1 text-stone-700">
+            <p className="mt-1 text-slate-700">
               Your cookbook is read-only. Subscribe for £5 a month to add and change recipes, upload receipts and use
               the AI features. Cancel any time.
             </p>
@@ -69,7 +69,7 @@ export default async function AccountPage({
         )}
         {access.customerId && access.kind !== "free" && (
           <form action="/account/billing" method="post" className="mt-3">
-            <button type="submit" className="rounded-md border border-stone-300 px-4 py-2">
+            <button type="submit" className="rounded-xl border border-slate-300 px-4 py-2">
               {access.kind === "none"
                 ? "See past invoices"
                 : access.kind === "cancelling"
@@ -82,20 +82,20 @@ export default async function AccountPage({
 
       <section className="mt-8">
         <h2 className="text-lg font-semibold">AI this week</h2>
-        <p className="mt-1 text-stone-700">
+        <p className="mt-1 text-slate-700">
           Pasting recipes, reading receipts and costing recipes use AI. You can use up to{" "}
           {formatPence(WEEKLY_LIMIT_PENCE)} in any 7 days.
         </p>
-        <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-stone-200">
-          <div className="h-full bg-orange-700" style={{ width: `${share * 100}%` }} />
+        <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+          <div className="h-full bg-sky-700" style={{ width: `${share * 100}%` }} />
         </div>
-        <p className="mt-1 text-sm text-stone-600">
+        <p className="mt-1 text-sm text-slate-600">
           {formatPence(spent)} used, {formatPence(Math.max(0, WEEKLY_LIMIT_PENCE - spent))} left
         </p>
       </section>
 
       <form action={signOut} className="mt-10">
-        <button type="submit" className="rounded-md border border-stone-300 px-4 py-2">Sign out</button>
+        <button type="submit" className="rounded-xl border border-slate-300 px-4 py-2">Sign out</button>
       </form>
     </main>
   );
