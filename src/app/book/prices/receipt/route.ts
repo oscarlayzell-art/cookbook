@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PriceError, readReceipt } from "@/lib/prices/receipt";
 import { getAccess } from "@/lib/billing/server";
 import { READ_ONLY_MESSAGE } from "@/lib/billing/access";
+import { removeOlderPrices } from "@/lib/prices/server";
 
 export type ReceiptResult = { added: number; shop: string | null } | { error: string };
 
@@ -35,6 +36,8 @@ export async function POST(request: Request) {
       console.error("Saving prices failed", error);
       throw new PriceError("We read the receipt but couldn't save the prices. Please try again.");
     }
+    // The newest price for each item replaces any older ones.
+    await removeOlderPrices(supabase);
     revalidatePath("/book/prices");
     return reply({ added: receipt.items.length, shop: receipt.shop });
   } catch (e) {

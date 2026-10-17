@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { supabaseUrl } from "@/lib/supabase/config";
 import Link from "next/link";
 import { Logo } from "../logo";
+import { verifyEmailCode } from "./actions";
 
 function friendlyError(message: string) {
   // Supabase reports our invite check as a generic "Database error saving new user".
@@ -53,9 +54,9 @@ export default function LoginPage() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const { error } = await createClient().auth.verifyOtp({ email, token: code.trim(), type: "email" });
+    const { error } = await verifyEmailCode(email, code.trim());
     setBusy(false);
-    if (error) return setError(friendlyError(error.message));
+    if (error) return setError(friendlyError(error));
     router.push("/book");
     router.refresh();
   }
