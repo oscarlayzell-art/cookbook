@@ -68,3 +68,18 @@ export function byShop(rows: HistoryRow[]) {
     .map(([shop, prices]) => ({ shop, count: prices.length, usual: usualPrice(prices)! }))
     .sort((a, b) => a.usual - b.usual || a.shop.localeCompare(b.shop));
 }
+
+/** How far back the usual price looks, so it follows what things cost now. */
+export const USUAL_MONTHS = 3;
+
+/**
+ * Prices recent enough to count towards the usual price: the last few months,
+ * or the three newest if none are that recent. Rows must be ordered newest first.
+ */
+export function recentPrices<T extends HistoryRow>(rows: T[], today = new Date()): T[] {
+  const cutoff = new Date(today);
+  cutoff.setMonth(cutoff.getMonth() - USUAL_MONTHS);
+  const since = cutoff.toISOString().slice(0, 10);
+  const recent = rows.filter((r) => paidOn(r) >= since);
+  return recent.length ? recent : rows.slice(0, 3);
+}

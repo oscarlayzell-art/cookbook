@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { byShop, groupPrices, paidOn, usualPrice } from "./latest";
+import { byShop, groupPrices, paidOn, recentPrices, usualPrice } from "./latest";
 
 const row = (id: string, item: string, price_pence: number, pack_size: string | null = "4 pints") => ({
   id,
@@ -62,5 +62,20 @@ describe("byShop", () => {
       { shop: "Unknown shop", count: 1, usual: 150 },
       { shop: "Waitrose", count: 2, usual: 160 },
     ]);
+  });
+});
+
+describe("recentPrices", () => {
+  const dated = (id: string, bought_on: string) => ({ ...row(id, "Milk", 100), bought_on });
+  const today = new Date("2026-10-17T12:00:00Z");
+
+  it("keeps only the last 3 months", () => {
+    const rows = [dated("a", "2026-10-01"), dated("b", "2026-07-20"), dated("c", "2026-07-01")];
+    expect(recentPrices(rows, today).map((r) => r.id)).toEqual(["a", "b"]);
+  });
+
+  it("falls back to the newest three when nothing is that recent", () => {
+    const rows = ["2026-05-01", "2026-04-01", "2026-03-01", "2026-02-01"].map((d, i) => dated(String(i), d));
+    expect(recentPrices(rows, today).map((r) => r.id)).toEqual(["0", "1", "2"]);
   });
 });

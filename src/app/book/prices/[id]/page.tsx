@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { byShop, groupPrices, itemKey, paidOn, samePack, usualPrice } from "@/lib/prices/latest";
+import { byShop, groupPrices, itemKey, paidOn, recentPrices, samePack, usualPrice, USUAL_MONTHS } from "@/lib/prices/latest";
 import { formatPence, shortDate } from "@/lib/prices/format";
 import { getAccess } from "@/lib/billing/server";
 import { deletePrice } from "../../actions";
@@ -32,8 +32,9 @@ export default async function PriceItemPage({
   const { latest, history, lowest } = group;
   const comparable = history.filter((r) => samePack(r, latest));
   const otherPacks = history.length - comparable.length;
-  const usual = usualPrice(comparable.map((r) => r.price_pence));
-  const shops = byShop(comparable);
+  const recent = recentPrices(comparable);
+  const usual = usualPrice(recent.map((r) => r.price_pence));
+  const shops = byShop(recent);
   const first = comparable[comparable.length - 1];
   const back = q ? `/book/prices?q=${encodeURIComponent(q)}` : "/book/prices";
 
@@ -62,7 +63,8 @@ export default async function PriceItemPage({
         <>
           <p className="mt-3 text-sm text-stone-600">
             Lowest was {formatPence(lowest.price_pence)}
-            {lowest.shop && <> at {lowest.shop}</>} on {shortDate(paidOn(lowest))}.
+            {lowest.shop && <> at {lowest.shop}</>} on {shortDate(paidOn(lowest))}. Usual is the middle price
+            you&apos;ve paid in the last {USUAL_MONTHS} months.
           </p>
           <div className="mt-4 rounded-lg border border-stone-200 bg-white p-3">
             <PriceChart points={[...comparable].reverse().map((r) => ({ date: paidOn(r), pence: r.price_pence }))} />
@@ -77,6 +79,7 @@ export default async function PriceItemPage({
       {shops.length > 1 && (
         <section className="mt-6">
           <h2 className="font-semibold">By shop</h2>
+          <p className="text-sm text-stone-600">Usual prices are from the last {USUAL_MONTHS} months.</p>
           <ul className="mt-1 divide-y divide-stone-200 text-sm">
             {shops.map((s) => (
               <li key={s.shop} className="flex items-center gap-3 py-2">
