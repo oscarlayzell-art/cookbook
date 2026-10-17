@@ -8,6 +8,8 @@ import { recipeFromText } from "@/lib/import/ai";
 import type { ImportedRecipe } from "@/lib/import/parse";
 import { costRecipe, type PriceRow } from "@/lib/prices/cost";
 import { PriceError } from "@/lib/prices/receipt";
+import { removeOlderPrices } from "@/lib/prices/server";
+import { itemKey } from "@/lib/prices/latest";
 import { baseServings } from "@/lib/servings/scale";
 import { getAccess } from "@/lib/billing/server";
 import { READ_ONLY_MESSAGE } from "@/lib/billing/access";
@@ -120,6 +122,32 @@ export async function deletePrice(id: string) {
   revalidatePath("/book/prices");
 }
 
+export type PriceEditState = { error: string | null; saved?: boolean };
+
+/** Change a price by hand. The edited price becomes the latest one for that item. */
+export async function updatePrice(id: string, _prev: PriceEditState, form: FormData): Promise<PriceEditState> {
+  if (!(await getAccess()).canEdit) return { error: READ_ONLY_MESSAGE };
+  const item = String(form.get("item") ?? "").trim();
+  const packSize = String(form.get("pack_size") ?? "").trim();
+  const pounds = Number(String(form.get("price") ?? "").replace(/[£,\s]/g, ""));
+  if (!item) return { error: "Give the item a name." };
+  if (!Number.isFinite(pounds) || pounds < 0) return { error: "Enter the price in pounds, like 1.25." };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("prices")
+    .update({
+      item,
+      pack_size: packSize || null,
+      price_pence: Math.round(pounds * 100),
+      created_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) return { error: "We couldn't save that price. Please try again." };
+  await removeOlderPrices(supabase);
+  revalidatePath("/book/prices");
+  return { error: null, saved: true };
+}
+
 export type CostState = { error: string | null };
 
 /** Estimate a recipe's cost from the latest price of each item on the person's price list. */
@@ -132,7 +160,7 @@ export async function priceRecipe(id: string): Promise<CostState> {
   if (!recipe) return { error: "We couldn't find that recipe." };
   const latest = new Map<string, PriceRow>();
   for (const row of rows ?? []) {
-    const key = row.item.trim().toLowerCase();
+    const key = itemKey(row.item);
     if (!latest.has(key)) latest.set(key, row);
   }
   try {
