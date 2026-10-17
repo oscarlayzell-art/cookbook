@@ -149,7 +149,7 @@ export default function Home() {
               when you change how many you&apos;re cooking for.
             </p>
           </div>
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
             <div className="rounded-3xl bg-sky-50 p-8">
               <span className="text-4xl" aria-hidden>🥗</span>
               <h3 className="mt-4 text-xl font-semibold text-sky-950">Nutrition per serving</h3>
@@ -166,12 +166,10 @@ export default function Home() {
                 every dish.
               </p>
             </div>
-          </div>
-          <div className="mx-auto mt-6 flex max-w-3xl items-start gap-4 rounded-3xl bg-amber-50 p-6">
-            <span className="text-3xl" aria-hidden>📈</span>
-            <div>
-              <h3 className="text-lg font-semibold text-sky-950">Track prices</h3>
-              <p className="mt-1 text-slate-600">
+            <div className="rounded-3xl bg-amber-50 p-8">
+              <span className="text-4xl" aria-hidden>📈</span>
+              <h3 className="mt-4 text-xl font-semibold text-sky-950">Track prices</h3>
+              <p className="mt-2 text-slate-600">
                 Halo remembers what you&apos;ve paid for every item, so in the supermarket you can see at a glance
                 whether today&apos;s price is a good one.
               </p>
