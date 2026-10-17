@@ -48,3 +48,23 @@ export function groupPrices<T extends HistoryRow>(rows: T[]): PriceGroup<T>[] {
     return { latest, history, lowest, change: previous ? latest.price_pence - previous.price_pence : null };
   });
 }
+
+/** The middle price, a fair "usual" price that one-off offers don't drag around. */
+export function usualPrice(prices: number[]): number | null {
+  if (!prices.length) return null;
+  const sorted = [...prices].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+}
+
+/** How often the item was bought at each shop and what it usually cost there, cheapest shop first. */
+export function byShop(rows: HistoryRow[]) {
+  const shops = new Map<string, number[]>();
+  for (const r of rows) {
+    const shop = r.shop?.trim() || "Unknown shop";
+    shops.set(shop, [...(shops.get(shop) ?? []), r.price_pence]);
+  }
+  return [...shops.entries()]
+    .map(([shop, prices]) => ({ shop, count: prices.length, usual: usualPrice(prices)! }))
+    .sort((a, b) => a.usual - b.usual || a.shop.localeCompare(b.shop));
+}

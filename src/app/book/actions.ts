@@ -119,7 +119,7 @@ export async function deleteRecipe(id: string) {
 export async function deletePrice(id: string) {
   const supabase = await createClient();
   await supabase.from("prices").delete().eq("id", id);
-  revalidatePath("/book/prices");
+  revalidatePath("/book/prices", "layout");
 }
 
 /** Ids of every price kept for the item with this name. */
@@ -138,7 +138,7 @@ export async function deletePriceItem(id: string) {
   const supabase = await createClient();
   const { data: row } = await supabase.from("prices").select("item").eq("id", id).maybeSingle();
   if (row) await forEachChunk(await itemPriceIds(supabase, row.item), (c) => supabase.from("prices").delete().in("id", c));
-  revalidatePath("/book/prices");
+  revalidatePath("/book/prices", "layout");
 }
 
 export type PriceEditState = { error: string | null; saved?: boolean };
@@ -168,7 +168,7 @@ export async function updatePrice(id: string, _prev: PriceEditState, form: FormD
     const ids = await itemPriceIds(supabase, before.item);
     await forEachChunk(ids, (c) => supabase.from("prices").update({ item }).in("id", c));
   }
-  revalidatePath("/book/prices");
+  revalidatePath("/book/prices", "layout");
   return { error: null, saved: true };
 }
 

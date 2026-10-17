@@ -6,7 +6,8 @@ import { ReceiptUpload } from "./receipt-upload";
 import { getAccess } from "@/lib/billing/server";
 import { ReadOnlyBanner } from "../../read-only-banner";
 
-export default async function PricesPage() {
+export default async function PricesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q } = await searchParams;
   const supabase = await createClient();
   const { canEdit } = await getAccess();
   const { data: prices } = await supabase
@@ -30,7 +31,7 @@ export default async function PricesPage() {
       {!items.length ? (
         <p className="mt-8 text-stone-600">No prices yet. Upload a receipt to get started.</p>
       ) : (
-        <PriceTable items={items} canEdit={canEdit} />
+        <PriceTable items={items} canEdit={canEdit} initialQuery={q ?? ""} />
       )}
     </main>
   );
