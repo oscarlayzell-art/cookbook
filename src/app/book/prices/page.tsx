@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { olderDuplicateIds } from "@/lib/prices/latest";
+import { groupPrices } from "@/lib/prices/latest";
 import { PriceTable } from "./price-table";
 import { ReceiptUpload } from "./receipt-upload";
 import { getAccess } from "@/lib/billing/server";
@@ -11,12 +11,11 @@ export default async function PricesPage() {
   const { canEdit } = await getAccess();
   const { data: prices } = await supabase
     .from("prices")
-    .select("id, item, pack_size, price_pence, shop, bought_on")
+    .select("id, item, pack_size, price_pence, shop, bought_on, created_at")
     .order("created_at", { ascending: false })
-    .limit(2000);
-  // Only the newest price for each item counts, so hide older ones still waiting to be cleared.
-  const older = new Set(olderDuplicateIds(prices ?? []));
-  const latest = (prices ?? []).filter((p) => !older.has(p.id));
+    .limit(5000);
+  // One row per item showing its newest price, with the older prices kept as its history.
+  const items = groupPrices(prices ?? []);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
@@ -24,14 +23,14 @@ export default async function PricesPage() {
       <h1 className="mt-3 text-2xl font-semibold">My prices</h1>
       <p className="mt-3 text-stone-700">
         Upload your shopping receipts and we&apos;ll keep a list of what things cost you. Each recipe can then
-        show roughly what it costs per portion.
+        show roughly what it costs per portion. Tap an item to see what you&apos;ve paid for it before.
       </p>
       {canEdit ? <ReceiptUpload /> : <ReadOnlyBanner />}
 
-      {!latest.length ? (
+      {!items.length ? (
         <p className="mt-8 text-stone-600">No prices yet. Upload a receipt to get started.</p>
       ) : (
-        <PriceTable prices={latest} canEdit={canEdit} />
+        <PriceTable items={items} canEdit={canEdit} />
       )}
     </main>
   );

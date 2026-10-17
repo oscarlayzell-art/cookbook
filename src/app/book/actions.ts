@@ -8,7 +8,6 @@ import { recipeFromText } from "@/lib/import/ai";
 import type { ImportedRecipe } from "@/lib/import/parse";
 import { costRecipe, type PriceRow } from "@/lib/prices/cost";
 import { PriceError } from "@/lib/prices/receipt";
-import { removeOlderPrices } from "@/lib/prices/server";
 import { itemKey } from "@/lib/prices/latest";
 import { baseServings } from "@/lib/servings/scale";
 import { getAccess } from "@/lib/billing/server";
@@ -116,15 +115,35 @@ export async function deleteRecipe(id: string) {
   redirect("/book");
 }
 
+/** Remove one past price, e.g. one a receipt was misread for. */
 export async function deletePrice(id: string) {
   const supabase = await createClient();
   await supabase.from("prices").delete().eq("id", id);
   revalidatePath("/book/prices");
 }
 
+/** Ids of every price kept for the item with this name. */
+async function itemPriceIds(supabase: Supabase, item: string) {
+  const { data: rows } = await supabase.from("prices").select("id, item").limit(10000);
+  const key = itemKey(item);
+  return (rows ?? []).filter((r) => itemKey(r.item) === key).map((r) => r.id as string);
+}
+
+async function forEachChunk(ids: string[], run: (chunk: string[]) => PromiseLike<unknown>) {
+  for (let i = 0; i < ids.length; i += 200) await run(ids.slice(i, i + 200));
+}
+
+/** Remove an item from the price list, along with all its past prices. */
+export async function deletePriceItem(id: string) {
+  const supabase = await createClient();
+  const { data: row } = await supabase.from("prices").select("item").eq("id", id).maybeSingle();
+  if (row) await forEachChunk(await itemPriceIds(supabase, row.item), (c) => supabase.from("prices").delete().in("id", c));
+  revalidatePath("/book/prices");
+}
+
 export type PriceEditState = { error: string | null; saved?: boolean };
 
-/** Change a price by hand. The edited price becomes the latest one for that item. */
+/** Change the latest price by hand. Past prices are kept, so the price history stays. */
 export async function updatePrice(id: string, _prev: PriceEditState, form: FormData): Promise<PriceEditState> {
   if (!(await getAccess()).canEdit) return { error: READ_ONLY_MESSAGE };
   const item = String(form.get("item") ?? "").trim();
@@ -133,6 +152,7 @@ export async function updatePrice(id: string, _prev: PriceEditState, form: FormD
   if (!item) return { error: "Give the item a name." };
   if (!Number.isFinite(pounds) || pounds < 0) return { error: "Enter the price in pounds, like 1.25." };
   const supabase = await createClient();
+  const { data: before } = await supabase.from("prices").select("item").eq("id", id).maybeSingle();
   const { error } = await supabase
     .from("prices")
     .update({
@@ -143,7 +163,11 @@ export async function updatePrice(id: string, _prev: PriceEditState, form: FormD
     })
     .eq("id", id);
   if (error) return { error: "We couldn't save that price. Please try again." };
-  await removeOlderPrices(supabase);
+  // A new name applies to the item's past prices too, so its history stays together.
+  if (before && itemKey(before.item) !== itemKey(item)) {
+    const ids = await itemPriceIds(supabase, before.item);
+    await forEachChunk(ids, (c) => supabase.from("prices").update({ item }).in("id", c));
+  }
   revalidatePath("/book/prices");
   return { error: null, saved: true };
 }
@@ -155,7 +179,7 @@ export async function priceRecipe(id: string): Promise<CostState> {
   const supabase = await createClient();
   const [{ data: recipe }, { data: rows }] = await Promise.all([
     supabase.from("recipes").select("ingredients, servings").eq("id", id).maybeSingle(),
-    supabase.from("prices").select("item, pack_size, price_pence").order("created_at", { ascending: false }).limit(1000),
+    supabase.from("prices").select("item, pack_size, price_pence").order("created_at", { ascending: false }).limit(5000),
   ]);
   if (!recipe) return { error: "We couldn't find that recipe." };
   const latest = new Map<string, PriceRow>();
