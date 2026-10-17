@@ -175,3 +175,44 @@ export async function setOptionalIngredients(id: string, indices: number[]) {
   await supabase.from("recipes").update({ optional_ingredients: clean }).eq("id", id);
   revalidatePath(`/book/${id}`);
 }
+
+/** Pick one of the recipe's tags to show as a badge on its tile, or clear it. */
+export async function setKeyLabel(id: string, label: string | null) {
+  const supabase = await createClient();
+  await supabase.from("recipes").update({ key_label: label?.trim() || null }).eq("id", id);
+  revalidatePath("/book");
+  revalidatePath(`/book/${id}`);
+}
+
+/** Use the person's own photo for the recipe, or go back to the original with null. */
+export async function setCustomImage(id: string, url: string | null) {
+  const supabase = await createClient();
+  await supabase.from("recipes").update({ custom_image_url: url }).eq("id", id);
+  revalidatePath("/book");
+  revalidatePath(`/book/${id}`);
+}
+
+/**
+ * Put the ingredients in a new order. `order` lists the old positions in their new order, so
+ * optional ingredients and the cost breakdown can follow them.
+ */
+export async function reorderIngredients(id: string, order: number[]) {
+  const supabase = await createClient();
+  const { data: r } = await supabase
+    .from("recipes")
+    .select("ingredients, optional_ingredients, cost")
+    .eq("id", id)
+    .maybeSingle();
+  if (!r) return;
+  const n = r.ingredients.length;
+  const valid = order.length === n && new Set(order).size === n && order.every((i) => Number.isInteger(i) && i >= 0 && i < n);
+  if (!valid) return;
+  const newPosition = new Map(order.map((old, i) => [old, i]));
+  const update: Record<string, unknown> = {
+    ingredients: order.map((i) => r.ingredients[i]),
+    optional_ingredients: (r.optional_ingredients ?? []).map((i: number) => newPosition.get(i)).filter((i: number | undefined) => i !== undefined),
+  };
+  if (r.cost?.lines?.length === n) update.cost = { ...r.cost, lines: order.map((i) => r.cost.lines[i]) };
+  await supabase.from("recipes").update(update).eq("id", id);
+  revalidatePath(`/book/${id}`);
+}
