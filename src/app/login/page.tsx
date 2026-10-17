@@ -70,7 +70,7 @@ export default function LoginPage() {
           <Logo />
         </Link>
         <div className="rounded-3xl bg-white p-7 shadow-xl shadow-sky-900/10 ring-1 ring-sky-100">
-          <h1 className="text-3xl font-semibold">{sent ? "Check your inbox" : isNew ? "Create your account" : "Sign in"}</h1>
+          <h1 className="font-[Georgia,'Times_New_Roman',serif] text-3xl font-semibold text-sky-950">{sent ? "Check your inbox" : isNew ? "Create your account" : "Sign in"}</h1>
           {!sent ? (
             <form onSubmit={sendEmail} className="mt-6 space-y-4">
               <p className="text-slate-700">

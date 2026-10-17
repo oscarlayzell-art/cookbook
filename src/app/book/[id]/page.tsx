@@ -29,10 +29,10 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <Link href="/book" className="text-sm text-sky-800">← My cookbook</Link>
+      <Link href="/book" className="text-sm text-orange-800">← My cookbook</Link>
       <h1 className="mt-3 text-3xl font-semibold">{r.title}</h1>
-      {r.description && <p className="mt-2 text-slate-600">{r.description}</p>}
-      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-600">
+      {r.description && <p className="mt-2 text-stone-600">{r.description}</p>}
+      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-stone-600">
         {r.servings && <span>Serves {String(r.servings).replace(/^serves\s*/i, "")}</span>}
         {times.map(([label, v]) => (
           <span key={label}>{label}: {v}</span>
@@ -51,12 +51,12 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
       ) : (
         (r.custom_image_url ?? r.image_url) && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={r.custom_image_url ?? r.image_url} alt="" className="mt-6 w-full rounded-2xl object-cover" />
+          <img src={r.custom_image_url ?? r.image_url} alt="" className="mt-6 w-full rounded-lg object-cover" />
         )
       )}
 
       {incomplete && canEdit && (
-        <p className="mt-6 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+        <p className="mt-6 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
           We couldn&apos;t read the full recipe from that page.{" "}
           <Link href={`/book/${r.id}/edit`} className="underline">Add the missing details</Link>.
         </p>
@@ -76,7 +76,7 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 
       <footer className="mt-10 flex flex-wrap items-center gap-4 text-sm">
         {r.source_url && (
-          <a href={r.source_url} target="_blank" rel="noreferrer" className="text-sky-800 underline">
+          <a href={r.source_url} target="_blank" rel="noreferrer" className="text-orange-800 underline">
             Original recipe
           </a>
         )}

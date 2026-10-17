@@ -18,9 +18,9 @@ export default function SaveButtonPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">
-      <Link href="/book" className="text-sm text-sky-800">← My cookbook</Link>
+      <Link href="/book" className="text-sm text-orange-800">← My cookbook</Link>
       <h1 className="mt-3 text-2xl font-semibold">The Save to Cook Book button</h1>
-      <p className="mt-3 text-slate-700">
+      <p className="mt-3 text-stone-700">
         Some recipe sites, including big supermarkets, block other websites from reading their pages.
         This button gets round that: you click it while you&apos;re looking at a recipe, and it sends that
         recipe from your own browser straight into your cookbook.
@@ -34,7 +34,7 @@ export default function SaveButtonPage() {
       <a
         ref={link}
         onClick={(e) => e.preventDefault()}
-        className="mt-3 inline-block cursor-grab rounded-full bg-sky-700 px-4 py-2 font-medium text-white"
+        className="mt-3 inline-block cursor-grab rounded-md bg-orange-700 px-4 py-2 font-medium text-white"
       >
         Save to Cook Book
       </a>
@@ -50,7 +50,7 @@ export default function SaveButtonPage() {
           await navigator.clipboard.writeText(code);
           setCopied(true);
         }}
-        className="mt-3 rounded-xl border border-slate-300 bg-white px-4 py-2"
+        className="mt-3 rounded-md border border-stone-300 bg-white px-4 py-2"
       >
         {copied ? "Copied" : "Copy the code"}
       </button>

@@ -42,9 +42,9 @@ export function RecipeImage({
     <div className="relative mt-6">
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" className="w-full rounded-2xl object-cover" />
+        <img src={src} alt="" className="w-full rounded-lg object-cover" />
       ) : (
-        <div className="aspect-[4/3] w-full rounded-2xl bg-slate-100" />
+        <div className="aspect-[4/3] w-full rounded-lg bg-stone-100" />
       )}
       <input
         ref={file}
@@ -59,20 +59,20 @@ export function RecipeImage({
       />
       <div className="absolute right-3 bottom-3 flex flex-col items-end gap-2">
         {menu && (
-          <div className="flex flex-col overflow-hidden rounded-xl bg-white text-sm shadow-lg">
-            <button type="button" onClick={() => file.current?.click()} className="px-4 py-2 text-left hover:bg-slate-100">
+          <div className="flex flex-col overflow-hidden rounded-md bg-white text-sm shadow-lg">
+            <button type="button" onClick={() => file.current?.click()} className="px-4 py-2 text-left hover:bg-stone-100">
               {custom ? "Use a different photo" : "Use my own photo"}
             </button>
             {custom && (
               <button
                 type="button"
                 onClick={() => startBusy(async () => { await setCustomImage(id, null); setMenu(false); })}
-                className="px-4 py-2 text-left hover:bg-slate-100"
+                className="px-4 py-2 text-left hover:bg-stone-100"
               >
                 Back to the original photo
               </button>
             )}
-            <button type="button" onClick={() => setMenu(false)} className="px-4 py-2 text-left text-slate-500 hover:bg-slate-100">
+            <button type="button" onClick={() => setMenu(false)} className="px-4 py-2 text-left text-stone-500 hover:bg-stone-100">
               Cancel
             </button>
           </div>
