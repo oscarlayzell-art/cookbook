@@ -25,8 +25,10 @@ export default function LoginPage() {
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isNew, setIsNew] = useState(false);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("new")) setIsNew(true);
     if (new URLSearchParams(window.location.search).get("error") === "link") {
       setError("That sign-in link didn't work. It may have expired or been opened in a different browser. Ask for a new one below.");
     }
@@ -61,10 +63,14 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto max-w-sm px-4 py-24">
-      <h1 className="text-3xl font-semibold">{sent ? "Check your inbox" : "Sign in"}</h1>
+      <h1 className="text-3xl font-semibold">{sent ? "Check your inbox" : isNew ? "Create your account" : "Sign in"}</h1>
       {!sent ? (
         <form onSubmit={sendEmail} className="mt-6 space-y-4">
-          <p className="text-stone-700">Enter your email and we&apos;ll send you a sign-in link. No password needed.</p>
+          <p className="text-stone-700">
+            {isNew
+              ? "Enter your email and we'll send you a link to get started. No password needed."
+              : "Enter your email and we'll send you a sign-in link. No password needed."}
+          </p>
           <label className="block">
             <span className="text-sm">Email</span>
             <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} />
