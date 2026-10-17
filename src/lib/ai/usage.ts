@@ -49,6 +49,17 @@ export async function weeklySpendPence(): Promise<number> {
   return Number(data) || 0;
 }
 
+/** What each AI feature has cost the signed-in person in the last 7 days, in pence. */
+export async function weeklySpendByFeature(): Promise<Record<string, number>> {
+  const supabase = await createClient();
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase.from("ai_usage").select("feature, cost_pence").gt("created_at", since);
+  if (error) throw error;
+  const totals: Record<string, number> = {};
+  for (const row of data ?? []) totals[row.feature] = (totals[row.feature] ?? 0) + Number(row.cost_pence);
+  return totals;
+}
+
 /**
  * Run a Claude request if the person still has allowance left this week, then record what it cost.
  * A request that starts just under the limit can take someone slightly over it.
