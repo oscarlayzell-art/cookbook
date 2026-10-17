@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { baseServings } from "@/lib/servings/scale";
 import { deleteRecipe } from "../actions";
 import { ServingsView } from "./servings-view";
-import { RatingPicker } from "./rating-picker";
+import { KeyLabelPicker, RatingPicker } from "./rating-picker";
+import { RecipeImage } from "./recipe-image";
 
 // Working out a cost with AI can take a while.
 export const maxDuration = 120;
@@ -34,11 +35,11 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
           <span key={label}>{label}: {v}</span>
         ))}
       </div>
-      <RatingPicker id={r.id} rating={r.rating ?? null} />
-      {r.image_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={r.image_url} alt="" className="mt-6 w-full rounded-lg object-cover" />
-      )}
+      <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+        <RatingPicker id={r.id} rating={r.rating ?? null} />
+        <KeyLabelPicker id={r.id} tags={r.tags ?? []} keyLabel={r.key_label ?? null} />
+      </div>
+      <RecipeImage id={r.id} original={r.image_url} custom={r.custom_image_url ?? null} />
 
       {incomplete && (
         <p className="mt-6 rounded-md bg-amber-50 p-3 text-sm text-amber-900">

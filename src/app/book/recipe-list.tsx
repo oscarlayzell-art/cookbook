@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { RATING_LABELS } from "./[id]/rating-picker";
+import { badgeClass } from "@/lib/labels";
 
 export type ListRecipe = {
   id: string;
@@ -12,6 +13,8 @@ export type ListRecipe = {
   rating: string | null;
   ingredients: string[] | null;
   tags: string[] | null;
+  key_label?: string | null;
+  custom_image_url?: string | null;
 };
 
 type Density = "comfortable" | "compact";
@@ -94,17 +97,24 @@ export function RecipeList({ recipes }: { recipes: ListRecipe[] }) {
           {shown.map((r) => (
             <li key={r.id}>
               <Link href={`/book/${r.id}`} className="block overflow-hidden rounded-lg border border-stone-200 bg-white hover:shadow">
-                {r.image_url ? (
+                {r.custom_image_url || r.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={r.image_url} alt="" className="aspect-[4/3] w-full object-cover" />
+                  <img src={(r.custom_image_url || r.image_url)!} alt="" className="aspect-[4/3] w-full object-cover" />
                 ) : (
                   <div className="aspect-[4/3] w-full bg-stone-100" />
                 )}
                 <div className={density === "compact" ? "p-2" : "p-3"}>
                   <h2 className={`font-medium ${density === "compact" ? "text-sm" : ""}`}>{r.title}</h2>
-                  <p className="text-sm text-stone-500">
-                    {[r.rating && RATING_LABELS[r.rating], r.total_time].filter(Boolean).join(" · ")}
-                  </p>
+                  <div className="flex items-center justify-between gap-2 text-sm text-stone-500">
+                    <span className="truncate">
+                      {[r.rating && RATING_LABELS[r.rating], r.total_time].filter(Boolean).join(" · ")}
+                    </span>
+                    {r.key_label && (
+                      <span className={`shrink-0 truncate rounded-full border px-2 text-xs leading-5 font-medium ${badgeClass(r.key_label)}`}>
+                        {r.key_label}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </Link>
             </li>

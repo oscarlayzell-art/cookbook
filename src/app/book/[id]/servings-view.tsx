@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { scaleText } from "@/lib/servings/scale";
 import type { RecipeCost } from "@/lib/prices/format";
-import { savePortions, setOptionalIngredients } from "../actions";
+import { reorderIngredients, savePortions, setOptionalIngredients } from "../actions";
 import { CostPanel } from "./cost-panel";
 
 type Mode = "cook" | "split";
@@ -37,6 +37,8 @@ export function ServingsView({
   const [mode, setMode] = useState<Mode>(savedMode);
   const [optional, setOptional] = useState<Set<number>>(new Set(savedOptional));
   const [, startSaving] = useTransition();
+  // While reordering: the old positions in their new order.
+  const [order, setOrder] = useState<number[] | null>(null);
   const changed = base !== null && servings !== base;
   // "cook": make more or less food, so ingredients scale and each serving stays the same.
   // "split": share the same amount of food between more or fewer people, so each serving changes.
@@ -62,6 +64,26 @@ export function ServingsView({
     else next.add(i);
     setOptional(next);
     startSaving(() => setOptionalIngredients(id, [...next]));
+  }
+
+  function move(at: number, by: number) {
+    setOrder((o) => {
+      if (!o) return o;
+      const to = at + by;
+      if (to < 0 || to >= o.length) return o;
+      const next = [...o];
+      [next[at], next[to]] = [next[to], next[at]];
+      return next;
+    });
+  }
+
+  function saveOrder() {
+    if (!order) return;
+    const newPosition = new Map(order.map((old, i) => [old, i]));
+    setOptional(new Set([...optional].map((i) => newPosition.get(i)!)));
+    const chosen = order;
+    setOrder(null);
+    startSaving(() => reorderIngredients(id, chosen));
   }
 
   return (
@@ -110,12 +132,43 @@ export function ServingsView({
       )}
 
       <section className="mt-8">
-        <h2 className="text-xl font-semibold">Ingredients</h2>
+        <div className="group flex items-center gap-2">
+          <h2 className="text-xl font-semibold">Ingredients</h2>
+          {!order && ingredients.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setOrder(ingredients.map((_, i) => i))}
+              aria-label="Change the order of the ingredients"
+              title="Change the order"
+              className="rounded p-1 text-stone-400 opacity-60 hover:text-stone-700 focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+            >
+              ✎
+            </button>
+          )}
+        </div>
+        {order && (
+          <div className="mt-3 rounded-lg border border-orange-200 bg-orange-50 p-3">
+            <p className="text-sm text-stone-600">Move ingredients up or down, then save.</p>
+            <ol className="mt-2 space-y-1">
+              {order.map((old, at) => (
+                <li key={old} className="flex items-center gap-2 rounded bg-white px-2 py-1">
+                  <span className="flex-1">{ingredients[old]}</span>
+                  <button type="button" onClick={() => move(at, -1)} disabled={at === 0} aria-label="Move up" className="px-2 disabled:opacity-30">↑</button>
+                  <button type="button" onClick={() => move(at, 1)} disabled={at === order.length - 1} aria-label="Move down" className="px-2 disabled:opacity-30">↓</button>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-3 flex gap-3">
+              <button type="button" onClick={saveOrder} className="rounded-md bg-orange-700 px-3 py-1.5 text-sm font-medium text-white">Save order</button>
+              <button type="button" onClick={() => setOrder(null)} className="rounded-md border border-stone-300 px-3 py-1.5 text-sm">Cancel</button>
+            </div>
+          </div>
+        )}
         {ingredientFactor !== 1 && (
           <p className="mt-1 text-sm text-stone-500">Scaled for {servings} from the original {base}. Check tins and packs.</p>
         )}
         <p className="mt-1 text-sm text-stone-500">Tap an ingredient to mark it optional and leave it out of the cost.</p>
-        <ul className="mt-3 space-y-1">
+        <ul className={`mt-3 space-y-1 ${order ? "hidden" : ""}`}>
           {ingredients.map((item, i) => {
             const off = optional.has(i);
             return (

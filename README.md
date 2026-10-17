@@ -27,6 +27,8 @@ Built with Next.js, hosted on Vercel, with Supabase for sign-in and the database
    and see a cost per portion on each recipe.
 7. **Ratings, saved portions and optional ingredients**: in the Supabase SQL editor, run
    `supabase/migrations/0003_rating_portions.sql`.
+8. **Key labels and your own photos**: in the Supabase SQL editor, run
+   `supabase/migrations/0004_labels_images.sql`. It also creates the `recipe-images` storage bucket.
 
 ## Local development
 
